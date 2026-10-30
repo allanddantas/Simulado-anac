@@ -1,1901 +1,639 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-slate-900 text-slate-100">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plataforma de Simulado ANAC - MMA Módulo Básico</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        aviation: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#0284c7',
-                            600: '#0284c7',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                            950: '#082f49',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- html2pdf Library for Certificate Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
-        @media print {
-            .no-print { display: none !important; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulado ANAC MMA - Módulo Básico (AEROTD)</title>
+  <style>
+    :root {
+      --bg-dark: #080d1a;
+      --header-bg: #0b1329;
+      --card-bg: #10192e;
+      --card-border: #1e2d4a;
+      --input-bg: #152238;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary-blue: #2563eb;
+      --primary-hover: #1d4ed8;
+      --accent-blue: #3b82f6;
+      --accent-blue-bg: rgba(59, 130, 246, 0.12);
+      --success-green: #10b981;
+      --warning-yellow: #f59e0b;
+      --danger-red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding-bottom: 20px; }
+
+    /* HEADER PRINCIPAL */
+    header {
+      background-color: var(--header-bg);
+      border-bottom: 1px solid var(--card-border);
+      padding: 0.85rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-brand { display: flex; align-items: center; gap: 0.85rem; }
+    .header-logo-icon {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white; width: 42px; height: 42px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+    .header-title h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem; }
+    .header-title p { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+    .header-title p span { color: #f59e0b; font-weight: 700; }
+    .badge-fgv { background: rgba(37, 99, 235, 0.3); border: 1px solid #3b82f6; color: #93c5fd; font-size: 0.65rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+
+    .header-user-nav { display: flex; align-items: center; gap: 1rem; }
+    .user-profile-card {
+      background: var(--input-bg); border: 1px solid var(--card-border); padding: 0.35rem 0.85rem;
+      border-radius: 8px; display: flex; align-items: center; gap: 0.7rem;
+    }
+    .avatar-circle { width: 34px; height: 34px; border-radius: 50%; background: #223354; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: #94a3b8; font-weight: 700; border: 1px solid #334155; overflow: hidden; object-fit: cover; }
+    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { font-size: 0.8rem; }
+    .user-info .name { font-weight: 700; color: white; }
+    .user-info .canac { color: #60a5fa; font-size: 0.75rem; font-weight: 600; }
+
+    .nav-tabs { display: flex; background: var(--input-bg); padding: 3px; border-radius: 8px; border: 1px solid var(--card-border); }
+    .tab-btn { background: none; border: none; color: var(--text-muted); padding: 0.45rem 1rem; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: var(--primary-blue); color: white; }
+
+    /* LAYOUT DAS TELAS */
+    .container { max-width: 1280px; margin: 1.5rem auto; padding: 0 1rem; }
+    .setup-grid { display: grid; grid-template-columns: 1fr 420px; gap: 1.5rem; align-items: start; }
+    @media (max-width: 1024px) { .setup-grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .card-identificacao { padding: 1.5rem 1.5rem 1.25rem 1.5rem !important; }
+
+    .card-header-identifica { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+    .card-header-identifica .icon-badge {
+      background: #172554; border: 1px solid #1e40af; width: 44px; height: 44px;
+      border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+    }
+    .card-header-identifica h2 { font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
+    .card-header-identifica p { font-size: 0.82rem; color: var(--text-muted); }
+
+    .form-group { margin-bottom: 1.1rem; }
+    .form-label { display: block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.4rem; letter-spacing: 0.5px; }
+    .form-input, .form-select {
+      width: 100%; padding: 0.8rem; background: var(--input-bg); border: 1px solid var(--card-border);
+      border-radius: 8px; color: white; font-size: 0.92rem; outline: none; transition: border 0.2s;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--accent-blue); }
+
+    /* ÁREA DE FOTO OACI FUNCIONAL */
+    .oaci-upload-box {
+      background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px;
+      padding: 0.85rem 1rem; display: flex; align-items: center; gap: 1.25rem; margin-bottom: 0.5rem;
+    }
+    .oaci-preview {
+      width: 56px; height: 56px; background: #0f172a; border: 1px dashed #334155; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: #64748b; font-weight: 700; text-align: center;
+      overflow: hidden; flex-shrink: 0; position: relative;
+    }
+    .oaci-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .oaci-actions { display: flex; flex-direction: column; gap: 0.3rem; }
+    .btn-upload-photo {
+      background: #1e293b; border: 1px solid #334155; color: white; padding: 0.45rem 0.85rem;
+      border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; width: fit-content;
+    }
+    .btn-upload-photo:hover { background: #334155; }
+    .oaci-status { font-size: 0.75rem; color: var(--text-muted); }
+    .oaci-status span { color: var(--success-green); font-weight: 700; }
+
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1.1rem; }
+    .mode-card {
+      background: var(--input-bg); border: 2px solid var(--card-border); border-radius: 10px;
+      padding: 0.9rem; cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .mode-card.active { border-color: var(--primary-blue); background: var(--accent-blue-bg); }
+    .mode-card h4 { font-size: 0.92rem; font-weight: 700; color: white; margin-bottom: 0.2rem; display: flex; justify-content: space-between; align-items: center; }
+    .mode-card p { font-size: 0.74rem; color: var(--text-muted); line-height: 1.3; }
+
+    .btn-start-banca {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; width: 100%;
+      padding: 0.95rem; border-radius: 8px; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4); letter-spacing: 0.5px; transition: transform 0.1s, opacity 0.2s;
+      margin-bottom: 0 !important;
+    }
+    .btn-start-banca:hover { opacity: 0.95; transform: translateY(-1px); }
+
+    .btn-block-train {
+      background: var(--input-bg); border: 1px solid var(--card-border); color: white; width: 100%;
+      padding: 0.85rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.88rem; text-align: left;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-block-train:hover { border-color: var(--primary-blue); background: rgba(59, 130, 246, 0.05); }
+
+    /* EXECUÇÃO DA PROVA */
+    .block-header-card {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px;
+      padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;
+    }
+    .tag-block { background: var(--primary-blue); color: white; font-size: 0.75rem; font-weight: 800; padding: 0.35rem 0.75rem; border-radius: 6px; text-transform: uppercase; }
+    .timer-card { background: #000; border: 1px solid #27272a; padding: 0.4rem 0.9rem; border-radius: 8px; text-align: right; }
+    .timer-card .time { font-size: 1.25rem; font-weight: 800; color: var(--warning-yellow); font-family: monospace; }
+
+    .exam-grid { display: grid; grid-template-columns: 1fr 300px; gap: 1.25rem; }
+    @media (max-width: 960px) { .exam-grid { grid-template-columns: 1fr; } }
+
+    .question-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; min-height: 480px; }
+    .option-item {
+      background: var(--input-bg); border: 2px solid var(--card-border); border-radius: 8px;
+      padding: 0.9rem 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: all 0.15s; margin-bottom: 0.75rem;
+    }
+    .option-item.selected { border-color: var(--primary-blue) !important; background: var(--accent-blue-bg) !important; box-shadow: 0 0 0 1px var(--primary-blue); }
+    .option-item.correct { border-color: var(--success-green) !important; background: rgba(16, 185, 129, 0.15) !important; }
+    .option-item.wrong { border-color: var(--danger-red) !important; background: rgba(239, 68, 68, 0.15) !important; }
+
+    .q-map-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+    .q-map-btn { background: var(--input-bg); border: 1px solid var(--card-border); color: #94a3b8; height: 38px; border-radius: 6px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .q-map-btn.current { border: 2px solid white; color: white; }
+    .q-map-btn.answered { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+
+    .hidden { display: none !important; }
+  </style>
 </head>
-<body class="h-full flex flex-col justify-between overflow-x-hidden select-none bg-slate-900 text-slate-100">
+<body>
 
-    <!-- TOP NAVIGATION HEADER -->
-    <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-50 px-4 py-3 shadow-lg">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-            <!-- Brand & Portal Info -->
-            <div class="flex items-center space-x-3">
-                <div class="bg-blue-600 text-white p-2.5 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <i class="fa-solid fa-plane-departure text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-black text-lg sm:text-xl text-white tracking-tight flex items-center gap-2">
-                        SIMULADO ANAC <span class="bg-blue-900/80 text-blue-300 text-xs px-2 py-0.5 rounded border border-blue-700/60 font-semibold">FGV Exam Engine</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">Plataforma de Exames Teóricos &bull; <span class="text-amber-400 font-medium">MMA Módulo Básico</span></p>
-                </div>
-            </div>
-
-            <!-- Active User Credentials Display (When Logged in) -->
-            <div id="headerUserBadge" class="hidden flex items-center space-x-4 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-xl">
-                <div class="relative">
-                    <img id="headerUserPhoto" src="" alt="OACI Photo" class="w-9 h-9 rounded-full object-cover border-2 border-blue-500">
-                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full" title="Foto Padrão OACI Ativa"></span>
-                </div>
-                <div class="text-left text-xs">
-                    <div id="headerUserName" class="font-bold text-white max-w-[140px] sm:max-w-[180px] truncate">--</div>
-                    <div class="text-slate-400 flex items-center gap-2">
-                        <span>CANAC: <strong id="headerUserCanac" class="text-blue-400 font-mono">------</strong></span>
-                    </div>
-                </div>
-                <!-- Navigation Tabs -->
-                <div class="flex items-center space-x-1 pl-2 border-l border-slate-800">
-                    <button onclick="switchTab('exam')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-400 bg-blue-950/60 border border-blue-800" id="tabBtnExam">
-                        <i class="fa-solid fa-file-pen mr-1"></i> Simulado
-                    </button>
-                    <button onclick="switchTab('dashboard')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800" id="tabBtnDashboard">
-                        <i class="fa-solid fa-chart-line mr-1"></i> Desempenho
-                    </button>
-                </div>
-                <button onclick="confirmResetExam()" class="text-slate-400 hover:text-red-400 text-xs p-1.5 transition ml-1" title="Sair / Reiniciar">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- MAIN APP CONTAINER -->
-    <main id="mainContainer" class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6">
-        
-        <!-- ================= PAGE 0: DASHBOARD / DESEMPENHO PESSOAL ================= -->
-        <section id="dashboardScreen" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-                <div>
-                    <h2 class="text-2xl font-black text-white flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-blue-400"></i> Desempenho Pessoal & Evolução
-                    </h2>
-                    <p class="text-xs text-slate-400">Acompanhe seu histórico de bancos de simulados e métricas por matéria.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="switchTab('exam')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-plus"></i> Novo Simulado
-                    </button>
-                    <button onclick="clearHistoryConfirm()" class="px-3 py-2 bg-slate-800 hover:bg-red-950/60 border border-slate-700 hover:border-red-800 text-slate-400 hover:text-red-300 font-semibold text-xs rounded-xl transition" title="Limpar Histórico">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Summary KPIs Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-xl">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Simulados Feitos</div>
-                    <div id="kpiTotalExams" class="text-2xl sm:text-3xl font-black text-white mt-1 font-mono">0</div>
-                    <div class="text-[10px] text-slate-500 mt-0.5">Bancas completas ou parciais</div>
-                </div>
-                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-xl">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Taxa de Aprovação</div>
-                    <div id="kpiPassRate" class="text-2xl sm:text-3xl font-black text-emerald-400 mt-1 font-mono">0%</div>
-                    <div class="text-[10px] text-slate-500 mt-0.5">Critério 70% em todos blocos</div>
-                </div>
-                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-xl">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Média Geral</div>
-                    <div id="kpiAvgScore" class="text-2xl sm:text-3xl font-black text-blue-400 mt-1 font-mono">0.0 / 20</div>
-                    <div class="text-[10px] text-slate-500 mt-0.5">Média de acertos por bloco</div>
-                </div>
-                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-xl">
-                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tendência Recente</div>
-                    <div id="kpiTrend" class="text-xl sm:text-2xl font-black text-amber-400 mt-1 flex items-center gap-1.5">
-                        <span>--</span>
-                    </div>
-                    <div class="text-[10px] text-slate-500 mt-0.5">Comparações dos últimos exames</div>
-                </div>
-            </div>
-
-            <!-- Performance Breakdown per Subject Block -->
-            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
-                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-list-check text-blue-400"></i> Média de Rendimento por Matéria
-                </h3>
-                <div class="space-y-4">
-                    <!-- Bloco 1 -->
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold mb-1">
-                            <span class="text-blue-300">Bloco 1: Ciências Naturais, Matemática, Física & Eletricidade</span>
-                            <span id="dashBlock0Percent" class="text-slate-300 font-mono font-bold">0% (0/20)</span>
-                        </div>
-                        <div class="w-full bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden">
-                            <div id="dashBlock0Bar" class="h-3 bg-blue-500 transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <!-- Bloco 2 -->
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold mb-1">
-                            <span class="text-amber-300">Bloco 2: Regulamentação, CBA, SGSO & Fatores Humanos</span>
-                            <span id="dashBlock1Percent" class="text-slate-300 font-mono font-bold">0% (0/20)</span>
-                        </div>
-                        <div class="w-full bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden">
-                            <div id="dashBlock1Bar" class="h-3 bg-amber-500 transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <!-- Bloco 3 -->
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold mb-1">
-                            <span class="text-emerald-300">Bloco 3: Conhecimentos Básicos de Manutenção & Balanço</span>
-                            <span id="dashBlock2Percent" class="text-slate-300 font-mono font-bold">0% (0/20)</span>
-                        </div>
-                        <div class="w-full bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden">
-                            <div id="dashBlock2Bar" class="h-3 bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Exam History Table -->
-            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
-                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-blue-400"></i> Histórico de Simulados Realizados
-                </h3>
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-950 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
-                            <tr>
-                                <th class="p-3">Data / Hora</th>
-                                <th class="p-3">CIAC / Candidato</th>
-                                <th class="p-3 text-center">Bloco 1</th>
-                                <th class="p-3 text-center">Bloco 2</th>
-                                <th class="p-3 text-center">Bloco 3</th>
-                                <th class="p-3 text-center">Global</th>
-                                <th class="p-3 text-center">Resultado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody" class="divide-y divide-slate-800/80">
-                            <!-- Dynamically populated -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= PAGE 1: ANAC REGISTRATION & CONFIGURATION ================= -->
-        <section id="welcomeScreen" class="block space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                
-                <!-- Left Column: Registration Form -->
-                <div class="lg:col-span-7 bg-slate-800/90 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-                    <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-slate-700">
-                        <div class="p-2.5 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20">
-                            <i class="fa-solid fa-id-card text-xl"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-white">Identificação do Candidato ANAC</h2>
-                            <p class="text-xs text-slate-400">Preencha os dados do seu cadastro SACI/FGV para iniciar a banca.</p>
-                        </div>
-                    </div>
-
-                    <form id="registrationForm" onsubmit="handleRegistration(event)" class="space-y-4">
-                        <!-- Candidate Name -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                Nome Completo do Candidato <span class="text-red-400">*</span>
-                            </label>
-                            <input type="text" id="inputCandidateName" required placeholder="Ex: Roberto Carlos da Silva" 
-                                class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        </div>
-
-                        <!-- CANAC & CIAC Selection -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    Código CANAC (6 Dígitos) <span class="text-red-400">*</span>
-                                </label>
-                                <input type="text" id="inputCanac" maxlength="6" pattern="[0-9]{6}" required placeholder="Ex: 123456" 
-                                    class="w-full bg-slate-900 border border-slate-700 text-slate-100 font-mono rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                    CIAC Homologado <span class="text-red-400">*</span>
-                                </label>
-                                <select id="selectCiac" required class="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                    <option value="AEROTD - Faculdade e Escola de Aviação Civil" selected>AEROTD - Faculdade e Escola de Aviação Civil</option>
-                                    <option value="Escola de Aviação Asas do Brasil">Escola de Aviação Asas do Brasil</option>
-                                    <option value="CIAC Centro Tecnológico Aeronáutico">CIAC Centro Tecnológico Aeronáutico</option>
-                                    <option value="Aero Clube de São Paulo">Aero Clube de São Paulo</option>
-                                    <option value="Instituto de Manutenção Aeronáutica - IMA">Instituto de Manutenção Aeronáutica - IMA</option>
-                                    <option value="ETAA - Escola Técnica de Aviação">ETAA - Escola Técnica de Aviação</option>
-                                    <option value="Autodidata / Exame Direto ANAC">Autodidata / Exame Direto ANAC</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- OACI Photo Upload / Validation -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                                Foto de Identificação (Padrão OACI)
-                            </label>
-                            <div class="flex items-center space-x-4 bg-slate-900/80 border border-slate-700 rounded-xl p-3">
-                                <img id="previewOaciPhoto" src="https://placehold.co/100x100/1e293b/94a3b8?text=OACI+Foto" class="w-14 h-14 rounded-lg object-cover border border-slate-600">
-                                <div class="flex-grow text-xs">
-                                    <input type="file" id="inputPhoto" accept="image/*" onchange="handlePhotoUpload(event)" class="hidden">
-                                    <button type="button" onclick="document.getElementById('inputPhoto').click()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-medium rounded-lg transition mb-1">
-                                        <i class="fa-solid fa-camera mr-1"></i> Carregar Foto do Aluno
-                                    </button>
-                                    <p class="text-slate-400 text-[11px]">Sistema SACI: <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check"></i> Foto Validada OACI</span></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Exam Mode Selection -->
-                        <div class="pt-2">
-                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                                Modalidade de Simulado
-                            </label>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <label class="relative flex flex-col p-4 bg-slate-900 border-2 border-blue-600 rounded-xl cursor-pointer hover:border-blue-500 transition">
-                                    <input type="radio" name="examModeRadio" value="prova" checked class="sr-only" onchange="updateModeSelectionStyle()">
-                                    <span class="font-bold text-white text-sm flex items-center justify-between">
-                                        Modo Prova Real <i class="fa-solid fa-stopwatch text-amber-400"></i>
-                                    </span>
-                                    <span class="text-xs text-slate-400 mt-1">30 min por bloco, cronômetro regressivo e sem gabarito prévio.</span>
-                                </label>
-                                <label class="relative flex flex-col p-4 bg-slate-900 border-2 border-slate-700 rounded-xl cursor-pointer hover:border-slate-600 transition">
-                                    <input type="radio" name="examModeRadio" value="estudo" class="sr-only" onchange="updateModeSelectionStyle()">
-                                    <span class="font-bold text-white text-sm flex items-center justify-between">
-                                        Modo Estudo <i class="fa-solid fa-graduation-cap text-blue-400"></i>
-                                    </span>
-                                    <span class="text-xs text-slate-400 mt-1">Feedback e explicação do gabarito imediatamente a cada resposta.</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-base rounded-xl shadow-xl shadow-blue-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-4">
-                            <i class="fa-solid fa-play"></i> INICIAR BANCA COMPLETA (60 QUESTÕES RANDOMIZADAS)
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Right Column: Official Rules & Content Info -->
-                <div class="lg:col-span-5 space-y-6">
-                    <!-- Rule Summary Card -->
-                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4">
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-clipboard-list text-blue-400"></i> Estrutura do Módulo Básico MMA
-                        </h3>
-                        <p class="text-xs text-slate-300 leading-relaxed">
-                            A prova teórica oficial para Mecânico de Manutenção Aeronáutica é composta por 3 blocos de matérias sorteados do banco de dados oficial:
-                        </p>
-
-                        <div class="space-y-3 text-xs">
-                            <div class="p-3 bg-slate-900 rounded-xl border border-slate-700/80">
-                                <div class="font-bold text-blue-300 mb-0.5">Bloco 1 (20 Questões)</div>
-                                <div class="text-slate-400">Ciências Naturais, Matemática, Física/Química, Metrologia, Desenho Técnico e Eletricidade Básica.</div>
-                            </div>
-                            <div class="p-3 bg-slate-900 rounded-xl border border-slate-700/80">
-                                <div class="font-bold text-amber-300 mb-0.5">Bloco 2 (20 Questões)</div>
-                                <div class="text-slate-400">Regulamentação da Aviação Civil, CBA, Segurança Operacional (SGSO), Fatores Humanos e Legislação.</div>
-                            </div>
-                            <div class="p-3 bg-slate-900 rounded-xl border border-slate-700/80">
-                                <div class="font-bold text-emerald-300 mb-0.5">Bloco 3 (20 Questões)</div>
-                                <div class="text-slate-400">Práticas de Manutenção, Materiais, Corrosão, Tubulações, Peso e Balanceamento, Combustíveis, Inglês Técnico e Primeiros Socorros.</div>
-                            </div>
-                        </div>
-
-                        <!-- Cutoff Rule Box -->
-                        <div class="p-4 bg-amber-950/40 border border-amber-800/60 rounded-xl flex items-start space-x-3">
-                            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-0.5"></i>
-                            <div class="text-xs">
-                                <span class="font-bold text-amber-200">Critério de Aprovação ANAC:</span>
-                                <p class="text-amber-300/80 mt-0.5">É necessário alcançar no mínimo <strong>70% de acertos (14 de 20 questões)</strong> em CADA UM dos 3 blocos individualmente para ser aprovado na banca.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Individual Block Training Buttons -->
-                    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
-                            Treinar Matéria Específica
-                        </h4>
-                        <div class="space-y-2">
-                            <button onclick="quickStartBlock(0)" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-between">
-                                <span><i class="fa-solid fa-atom text-blue-400 mr-2"></i> Treinar Apenas Bloco 1</span>
-                                <i class="fa-solid fa-chevron-right text-slate-500"></i>
-                            </button>
-                            <button onclick="quickStartBlock(1)" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-between">
-                                <span><i class="fa-solid fa-scale-balanced text-amber-400 mr-2"></i> Treinar Apenas Bloco 2</span>
-                                <i class="fa-solid fa-chevron-right text-slate-500"></i>
-                            </button>
-                            <button onclick="quickStartBlock(2)" class="w-full text-left p-3 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-between">
-                                <span><i class="fa-solid fa-wrench text-emerald-400 mr-2"></i> Treinar Apenas Bloco 3</span>
-                                <i class="fa-solid fa-chevron-right text-slate-500"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ================= PAGE 2: ACTIVE EXAM INTERFACE ================= -->
-        <section id="examScreen" class="hidden space-y-4">
-            <!-- Exam Info Header Bar -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-                <div class="flex items-center space-x-3">
-                    <span id="blockBadge" class="px-3 py-1 text-xs font-black rounded-lg bg-blue-600 text-white shadow-md">
-                        BLOCO 1 DE 3
-                    </span>
-                    <div>
-                        <h3 id="blockTitle" class="font-extrabold text-white text-base sm:text-lg">--</h3>
-                        <p class="text-xs text-slate-400">Exame Teórico Eletrônico FGV/ANAC</p>
-                    </div>
-                </div>
-
-                <!-- Right Controls: Scratchpad + Countdown Timer -->
-                <div class="flex items-center space-x-3">
-                    <!-- Scratchpad Button -->
-                    <button onclick="toggleScratchpad()" class="px-3 py-2 bg-slate-900 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition flex items-center gap-1.5" title="Folha de Rascunho">
-                        <i class="fa-solid fa-pen-to-square text-amber-400"></i>
-                        <span class="hidden sm:inline">Rascunho</span>
-                    </button>
-
-                    <!-- Timer Display Box -->
-                    <div class="flex items-center space-x-3 bg-slate-950 border border-slate-700 px-4 py-2 rounded-xl">
-                        <i class="fa-solid fa-stopwatch text-amber-400 text-xl animate-pulse"></i>
-                        <div>
-                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Tempo do Bloco</div>
-                            <div id="timerDisplay" class="font-mono text-xl font-black text-amber-300 tracking-wider">30:00</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Exam Layout: Question Area + Navigation Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                
-                <!-- QUESTION DISPLAY AREA (Left 3 Columns) -->
-                <div class="lg:col-span-3 space-y-4">
-                    <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-2xl relative min-h-[440px] flex flex-col justify-between">
-                        
-                        <!-- Question Header -->
-                        <div>
-                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700/80">
-                                <span class="text-xs sm:text-sm font-bold text-slate-300">
-                                    Questão <span id="currentQuestionNum" class="text-blue-400 text-base font-black">1</span> de <span id="totalQuestionsInBlock">20</span>
-                                </span>
-                                <button id="btnFlagQuestion" onclick="toggleFlagQuestion()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-300 transition flex items-center gap-1.5">
-                                    <i class="fa-regular fa-bookmark" id="flagIcon"></i> <span id="flagText">Marcar para Revisão</span>
-                                </button>
-                            </div>
-
-                            <!-- Question Text -->
-                            <div id="questionText" class="text-base sm:text-lg text-slate-100 font-medium mb-6 leading-relaxed">
-                                Carregando questão...
-                            </div>
-
-                            <!-- Answer Options List -->
-                            <div id="optionsContainer" class="space-y-3">
-                                <!-- Populated dynamically -->
-                            </div>
-
-                            <!-- Study Mode Explanation Box -->
-                            <div id="studyFeedbackBox" class="hidden mt-6 p-4 rounded-xl bg-slate-950 border border-blue-500/40 text-xs sm:text-sm">
-                                <div class="font-bold mb-1 flex items-center gap-1.5 text-blue-400">
-                                    <i class="fa-solid fa-lightbulb"></i> Fundamentação Técnica:
-                                </div>
-                                <div id="studyFeedbackContent" class="text-slate-300 leading-relaxed"></div>
-                            </div>
-                        </div>
-
-                        <!-- Footer Navigation Buttons -->
-                        <div class="flex items-center justify-between pt-6 border-t border-slate-700/80 mt-6">
-                            <button id="btnPrev" onclick="navigateQuestion(-1)" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs sm:text-sm rounded-xl transition disabled:opacity-40 disabled:pointer-events-none flex items-center gap-2">
-                                <i class="fa-solid fa-chevron-left"></i> Anterior
-                            </button>
-
-                            <div class="flex gap-2">
-                                <button id="btnNext" onclick="navigateQuestion(1)" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center gap-2">
-                                    Próxima <i class="fa-solid fa-chevron-right"></i>
-                                </button>
-
-                                <button id="btnFinishBlock" onclick="confirmSubmitBlock()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center gap-2">
-                                    <i class="fa-solid fa-check"></i> Finalizar Bloco
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- NAVIGATION SIDE MAP (Right 1 Column) -->
-                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-2xl flex flex-col justify-between">
-                    <div>
-                        <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <i class="fa-solid fa-border-all text-blue-400"></i> Mapa de Questões
-                        </h4>
-                        
-                        <!-- Grid of 20 Question Buttons -->
-                        <div id="questionGrid" class="grid grid-cols-5 gap-2 mb-6">
-                            <!-- Populated dynamically -->
-                        </div>
-
-                        <!-- Legend -->
-                        <div class="space-y-2 border-t border-slate-700/80 pt-4 text-[11px] text-slate-400">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3.5 h-3.5 rounded bg-blue-600 inline-block border border-blue-400"></span> Respondida
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-3.5 h-3.5 rounded bg-amber-500 inline-block border border-amber-300"></span> Marcada p/ Revisão
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="w-3.5 h-3.5 rounded bg-slate-700 inline-block border border-slate-600"></span> Não Respondida
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-6 border-t border-slate-700/80 mt-4">
-                        <button onclick="confirmSubmitBlock()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition shadow-xl flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Submeter Bloco Atual
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- SCRATCHPAD MODAL / DRAWER -->
-            <div id="scratchpadDrawer" class="hidden bg-slate-950 border border-slate-700 rounded-2xl p-4 shadow-2xl space-y-2">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                        <i class="fa-solid fa-pen-to-square mr-1"></i> Rascunho / Anotações de Cálculo
-                    </span>
-                    <button onclick="toggleScratchpad()" class="text-slate-400 hover:text-white text-xs">
-                        <i class="fa-solid fa-xmark text-base"></i>
-                    </button>
-                </div>
-                <textarea id="scratchpadArea" placeholder="Digite aqui seus cálculos de física, peso e balanceamento ou anotações..." class="w-full h-28 bg-slate-900 border border-slate-800 text-slate-200 text-xs p-3 rounded-xl focus:outline-none resize-none font-mono custom-scrollbar"></textarea>
-            </div>
-        </section>
-
-        <!-- ================= PAGE 3: RESULTS & CERTIFICATE EXPORT ================= -->
-        <section id="resultScreen" class="hidden space-y-6">
-            
-            <!-- RESULT CERTIFICATE SECTION TO EXPORT -->
-            <div id="printableCertificate" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden space-y-6">
-                
-                <!-- Certificate Header -->
-                <div class="flex flex-col sm:flex-row items-center justify-between pb-6 border-b border-slate-700 gap-4">
-                    <div class="flex items-center space-x-4">
-                        <img id="certUserPhoto" src="" class="w-16 h-16 rounded-xl object-cover border-2 border-blue-500 shadow-md">
-                        <div>
-                            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">SACI / ANAC CERTIFICATION SIMULATOR</span>
-                            <h2 id="certCandidateName" class="text-xl sm:text-2xl font-black text-white">--</h2>
-                            <p class="text-xs text-slate-400">CANAC: <span id="certCanac" class="text-blue-300 font-mono font-bold">------</span> &bull; CIAC: <span id="certCiac" class="text-slate-300">--</span></p>
-                        </div>
-                    </div>
-                    <div class="text-right flex flex-col items-center sm:items-end">
-                        <span id="certDate" class="text-xs text-slate-400">--</span>
-                        <span id="certOverallBadge" class="mt-1 px-4 py-1.5 text-xs font-black rounded-full uppercase tracking-wider">
-                            STATUS
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Big Result Banner -->
-                <div id="certBanner" class="p-6 rounded-2xl text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 border shadow-inner">
-                    <div>
-                        <h3 id="certBannerTitle" class="text-2xl sm:text-3xl font-black text-white">--</h3>
-                        <p id="certBannerSubtitle" class="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl">--</p>
-                    </div>
-                    <div class="text-center sm:text-right">
-                        <div class="text-xs text-slate-400 uppercase font-semibold">Aproveitamento Global</div>
-                        <div id="certTotalPercentage" class="text-3xl sm:text-4xl font-black text-white font-mono">0%</div>
-                    </div>
-                </div>
-
-                <!-- Score Cards Grid for 3 Blocks -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="blockResultsContainer">
-                    <!-- Dynamically Populated -->
-                </div>
-            </div>
-
-            <!-- Actions Bar: Export PDF & Restart -->
-            <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                <button onclick="exportResultPDF()" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center gap-2">
-                    <i class="fa-solid fa-file-pdf text-base"></i> Baixar Comprovante de Simulado (PDF)
-                </button>
-
-                <button onclick="restartExamWithNewRandomization()" class="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center gap-2">
-                    <i class="fa-solid fa-shuffle text-base"></i> Novo Simulado (Sorteio Inédito)
-                </button>
-            </div>
-
-            <!-- Detailed Answer Key Review (Gabarito Comentado) -->
-            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-6">
-                <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-700">
-                    <div>
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-square-poll-vertical text-blue-400"></i> Gabarito Comentado e Análise Técnica
-                        </h3>
-                        <p class="text-xs text-slate-400">Revisão minuciosa de cada questão sorteada na sua banca.</p>
-                    </div>
-
-                    <!-- Filter by Block -->
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xs text-slate-400 font-medium">Filtrar Bloco:</span>
-                        <select id="reviewBlockSelect" onchange="renderReviewQuestions()" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:ring-1 focus:ring-blue-500">
-                            <option value="all">Todos os 3 Blocos</option>
-                            <option value="0">Bloco 1 - Ciências Naturais & Eletricidade</option>
-                            <option value="1">Bloco 2 - Regulamentação & SGSO</option>
-                            <option value="2">Bloco 3 - Conhecimentos de Manutenção</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Review Questions Container -->
-                <div id="reviewQuestionsList" class="space-y-4">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-
-        </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-slate-950 border-t border-slate-800 py-4 px-4 text-center text-xs text-slate-500">
-        <p>Simulado ANAC MMA - Módulo Básico &bull; Em conformidade com a IS 00-003, RBAC 65 e Diretrizes FGV &bull; Sistema Acadêmico de Treinamento</p>
-    </footer>
-
-    <!-- MODAL CONFIRMATION DIALOG -->
-    <div id="modalOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center space-x-3 text-amber-400">
-                <i class="fa-solid fa-circle-exclamation text-2xl"></i>
-                <h4 id="modalTitle" class="font-bold text-white text-lg">Aviso do Sistema</h4>
-            </div>
-            <p id="modalBody" class="text-sm text-slate-300 leading-relaxed">
-                Tem certeza de que deseja realizar esta ação?
-            </p>
-            <div class="flex justify-end space-x-3 pt-2">
-                <button id="modalBtnCancel" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition">
-                    Cancelar
-                </button>
-                <button id="modalBtnConfirm" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition">
-                    Confirmar
-                </button>
-            </div>
-        </div>
+  <!-- HEADER DA BANCA -->
+  <header>
+    <div class="header-brand">
+      <div class="header-logo-icon">✈️</div>
+      <div class="header-title">
+        <h1>SIMULADO ANAC <span class="badge-fgv">FGV Exam Engine</span></h1>
+        <p>Plataforma de Exames Teóricos • <span>MMA Módulo Básico</span></p>
+      </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC & QUESTION DATABASE -->
-    <script>
-        /* ==========================================================================
-           ROBUST QUESTION DATABASE FOR ANAC MMA BASIC MODULE (75+ QUESTIONS)
-           ========================================================================== */
-        const QUESTION_BANK = [
-            // ================= BLOCO 1: CIÊNCIAS NATURAIS, MATEMÁTICA, FÍSICA/QUÍMICA, METROLOGIA, DESENHO & ELETRICIDADE =================
-            {
-                blockIndex: 0,
-                text: "Na física da aviação, o princípio de Bernoulli estabelece que em um fluido em escoamento incompressível, quando a velocidade do fluido aumenta, a pressão estática:",
-                options: ["Aumenta proporcionalmente", "Permanece constante", "Diminui", "Torna-se turbulenta"],
-                correct: 2,
-                explanation: "O Princípio de Bernoulli fundamenta a sustentação aerodinâmica: o aumento da velocidade do escoamento no extradorso causa redução da pressão estática."
-            },
-            {
-                blockIndex: 0,
-                text: "A ferramenta de precisão indicada para medir folgas estreitas entre superfícies planas, como a folga entre pontas de anéis de pistão, é o:",
-                options: ["Paquímetro universal", "Micrômetro externo", "Cálibre de lâminas (calibrador de folga)", "Relógio comparador"],
-                correct: 2,
-                explanation: "O cálibre de lâminas (feeler gauge) é composto por lâminas metálicas de espessuras aferidas ideal para medição de folgas mecânicas."
-            },
-            {
-                blockIndex: 0,
-                text: "Qual é a resistência equivalente de um circuito elétrico em série contendo três resistores com valores de 12 ohms, 18 ohms e 30 ohms?",
-                options: [ "6 ohms", "60 ohms", "360 ohms", "5,4 ohms"],
-                correct: 1,
-                explanation: "Em circuitos em SÉRIE, a resistência equivalente é a soma direta dos resistores: Req = 12 + 18 + 30 = 60 Ohms."
-            },
-            {
-                blockIndex: 0,
-                text: "Um micrômetro em polegadas possui um fuso micrométrico com passo de 1/40 de polegada. Cada volta completa do tambor equivale linearmente a:",
-                options: ["0,100”", "0,025”", "0,001”", "0,250”"],
-                correct: 1,
-                explanation: "1 dividido por 40 é igual a 0,025 polegadas (vinte e cinco milésimos de polegada por revolução)."
-            },
-            {
-                blockIndex: 0,
-                text: "De acordo com a Lei de Ohm, se a tensão elétrica aplicada a um circuito for mantida constante e a resistência do circuito for dobrada, a corrente elétrica irá:",
-                options: ["Dobrar", "Cair pela metade", "Quadruplicar", "Permanecer inalterada"],
-                correct: 1,
-                explanation: "Pela Lei de Ohm (I = V / R), a corrente elétrica é inversamente proporcional à resistência do circuito."
-            },
-            {
-                blockIndex: 0,
-                text: "A capacidade de um metal aeronáutico sofrer deformação plástica permanente sob tração sem se romper é denominada:",
-                options: ["Dureza", "Elasticidade", "Ductilidade", "Tenacidade"],
-                correct: 2,
-                explanation: "Ductilidade é a propriedade mecânica que permite ao material ser estirado ou deformado sob tração sem fratura."
-            },
-            {
-                blockIndex: 0,
-                text: "Em metrologia, uma leitura de 0,05 mm em um paquímetro indica que o seu nônio (vernier) possui divisão de:",
-                options: ["10 divisões", "20 divisões", "50 divisões", "100 divisões"],
-                correct: 1,
-                explanation: "Resolutividade = 1mm / 20 divisões = 0,05 mm."
-            },
-            {
-                blockIndex: 0,
-                text: "O instrumento utilizado para medir a densidade específica do eletrólito de uma bateria chumbo-ácido é o:",
-                options: ["Voltímetro", "Amperímetro", "Densímetro (hidrômetro de sucção)", "Galvanômetro"],
-                correct: 2,
-                explanation: "O densímetro mede a gravidade específica da solução de ácido sulfúrico, indicando o estado de carga da bateria."
-            },
-            {
-                blockIndex: 0,
-                text: "Nos desenhos técnicos de aviação, as linhas tracejadas grossas ou médias são utilizadas para representar:",
-                options: ["Arestas e contornos visíveis", "Arestas e contornos ocultos (invisíveis)", "Linhas de centro e eixos de simetria", "Planos de corte"],
-                correct: 1,
-                explanation: "Linhas tracejadas padronizadas indicam detalhes, arestas e contornos que estão ocultos na vista projetada."
-            },
-            {
-                blockIndex: 0,
-                text: "Qual é a potência elétrica dissipada por um farol de táxi de 28 Volts que consome uma corrente contínua de 10 Amperes?",
-                options: ["2,8 Watts", "280 Watts", "38 Watts", "2800 Watts"],
-                correct: 1,
-                explanation: "A fórmula de potência é P = V x I. Portanto, P = 28 V x 10 A = 280 Watts."
-            },
-            {
-                blockIndex: 0,
-                text: "Um torquímetro flexionável foi ajustado para aplicar 200 lb.in em um parafuso. Se for utilizada uma extensão reta de 2 polegadas em um torquímetro de 10 polegadas, o torque real aplicado no parafuso será:",
-                options: ["Menor que o indicado", "Igual ao indicado", "Maior que o indicado no visor", "Zero"],
-                correct: 2,
-                explanation: "Adicionar uma extensão reta aumenta o braço de alavanca total, fazendo com que o torque real no fixador seja superior à leitura do torquímetro."
-            },
-            {
-                blockIndex: 0,
-                text: "A transferência de calor que ocorre através do contato direto molécula a molécula em um condutor sólido é a:",
-                options: ["Convecção", "Condução", "Radiação", "Sublimação"],
-                correct: 1,
-                explanation: "A condução térmica é o mecanismo de transferência de calor em sólidos através da agitação molecular direta."
-            },
-            {
-                blockIndex: 0,
-                text: "Na eletricidade, os capacitores associados em PARALELO têm sua capacitância total calculada pela:",
-                options: ["Soma direta das capacitâncias individuais", "Soma dos inversos das capacitâncias", "Média aritmética simples", "Multiplicação de todas"],
-                correct: 0,
-                explanation: "Capacitores em paralelo somam suas áreas de placa, resultando em C_total = C1 + C2 + C3..."
-            },
-            {
-                blockIndex: 0,
-                text: "Em física aeronáutica, a Primeira Lei de Newton (Lei da Inércia) estabelece que:",
-                options: ["Para toda ação há uma reação oposta", "A força é igual ao produto da massa pela aceleração", "Todo corpo permanece em repouso ou M.R.U. a menos que uma força resultante atue sobre ele", "A pressão de um gás varia com a temperatura"],
-                correct: 2,
-                explanation: "A Primeira Lei de Newton trata da manutenção do estado de repouso ou velocidade constante na ausência de forças resultantes."
-            },
-            {
-                blockIndex: 0,
-                text: "O componente semicondutor que permite a passagem de corrente elétrica em apenas uma direção é o:",
-                options: ["Capacitor", "Diodo", "Resistor", "Transformador"],
-                correct: 1,
-                explanation: "O diodo atua como uma válvula de sentido único para a corrente elétrica (polarização direta conduz, reversa bloqueia)."
-            },
-            {
-                blockIndex: 0,
-                text: "No Sistema Internacional de Unidades (SI), a unidade fundamental de frequência elétrica em ciclos por segundo é o:",
-                options: ["Watt", "Hertz (Hz)", "Volt", "Joule"],
-                correct: 1,
-                explanation: "O Hertz (Hz) equivale a 1 ciclo por segundo na medição de frequências alternadas."
-            },
-            {
-                blockIndex: 0,
-                text: "A escala de temperatura absoluta cuja origem (0 K) representa a cessação total do movimento molecular é a escala:",
-                options: ["Celsius", "Fahrenheit", "Kelvin", "Rankine"],
-                correct: 2,
-                explanation: "A escala Kelvin é a escala científica absoluta do SI (0 Kelvin = -273,15 °C)."
-            },
-            {
-                blockIndex: 0,
-                text: "O ensaio de dureza superficial em metais que utiliza uma esfera de aço endurecido ou carboneto sob uma carga padronizada é o método:",
-                options: ["Rockwell", "Brinell", "Vickers", "Charpy"],
-                correct: 1,
-                explanation: "O teste Brinell mede o diâmetro da calota deixada por uma esfera sob carga mecânica na superfície do metal."
-            },
-            {
-                blockIndex: 0,
-                text: "Em um circuito elétrico trifásico de aeronave com gerador de corrente alternada de 115V/200V, a frequência padrão utilizada é de:",
-                options: ["50 Hz", "60 Hz", "400 Hz", "1000 Hz"],
-                correct: 2,
-                explanation: "Sistemas elétricos aeronáuticos adotam 400 Hz para reduzir drasticamente o peso e tamanho de transformadores e motores elétricos."
-            },
-            {
-                blockIndex: 0,
-                text: "Um bloco de liga de alumínio possui massa de 540 gramas e volume de 200 cm³. Sua densidade absoluta é de:",
-                options: ["2,7 g/cm³", "108 g/cm³", "0,37 g/cm³", "5,4 g/cm³"],
-                correct: 0,
-                explanation: "Densidade = Massa / Volume. D = 540g / 200cm³ = 2,7 g/cm³ (densidade típica do alumínio)."
-            },
-            {
-                blockIndex: 0,
-                text: "Em eletromagnetismo, o fenômeno pelo qual uma variação de corrente em uma bobina induz uma tensão em uma bobina adjacente chama-se:",
-                options: ["Auto-indução", "Indução mútua", "Ressonância", "Relutância"],
-                correct: 1,
-                explanation: "A indução mútua é o princípio físico de funcionamento dos transformadores elétricos."
-            },
-            {
-                blockIndex: 0,
-                text: "Uma alavanca na qual o ponto de apoio (fulcro) situa-se entre a aplicação da força potente e a força resistente é classificada como:",
-                options: ["Inter-resistente", "Interfixa", "Interpotente", "Binária"],
-                correct: 1,
-                explanation: "Alavanca interfixa tem o ponto de apoio no meio (exemplo: tesoura, alicate)."
-            },
+    <div class="header-user-nav">
+      <div class="user-profile-card">
+        <div class="avatar-circle" id="userAvatar">OA</div>
+        <div class="user-info">
+          <div class="name" id="dispUserName">allan</div>
+          <div class="canac" id="dispUserCANAC">CANAC: 123456</div>
+        </div>
+      </div>
 
-            // ================= BLOCO 2: REGULAMENTAÇÃO DA AVIAÇÃO CIVIL, CBA, SGSO, FATORES HUMANOS =================
-            {
-                blockIndex: 1,
-                text: "A Agência Nacional de Aviação Civil (ANAC) é a autarquia especial federal criada pela Lei nº:",
-                options: ["7.565/1986", "11.182/2005", "6.009/1973", "13.848/2019"],
-                correct: 1,
-                explanation: "A Lei nº 11.182 de 27 de setembro de 2005 criou a ANAC, substituindo o antigo DAC."
-            },
-            {
-                blockIndex: 1,
-                text: "O pilar legal que estabelece as normas gerais de Direito Aeronáutico e a navegação aérea em território brasileiro é o:",
-                options: ["Código Civil Brasileiro", "Código Brasileiro de Aeronáutica (CBA - Lei 7.565/86)", "RBAC 145", "Regulamento da ICAO"],
-                correct: 1,
-                explanation: "O Código Brasileiro de Aeronáutica (CBA), Lei 7.565/86, é a legislação soberana da aviação no Brasil."
-            },
-            {
-                blockIndex: 1,
-                text: "De acordo com o RBAC 65, para a concessão da licença de Mecânico de Manutenção Aeronáutica (MMA), o candidato deve ter a idade mínima de:",
-                options: ["16 anos", "18 anos", "21 anos", "25 anos"],
-                correct: 1,
-                explanation: "O RBAC 65 exige idade mínima de 18 anos completos e conclusão do ensino médio."
-            },
-            {
-                blockIndex: 1,
-                text: "As Diretrizes de Aeronavegabilidade (DA) emitidas pela autoridade de aviação civil (ANAC) possuem caráter de cumprimento:",
-                options: ["Recomendado", "Obrigatório dentro dos prazos estipulados", "Opcional para voos privados", "Informativo"],
-                correct: 1,
-                explanation: "As Diretrizes de Aeronavegabilidade têm força de lei compulsória; o não cumprimento invalida o Certificado de Aeronavegabilidade."
-            },
-            {
-                blockIndex: 1,
-                text: "A sigla SGSO, de implementação obrigatória nas empresas e oficinas de aviação civil, significa:",
-                options: ["Sistema Global de Socorro Operacional", "Sistema de Gerenciamento da Segurança Operacional", "Serviço Geral de Suporte à Oficina", "Setor de Garantia de Serviços"],
-                correct: 1,
-                explanation: "SGSO (Safety Management System - SMS) é a estrutura organizacional para gerenciar os riscos de segurança operacional."
-            },
-            {
-                blockIndex: 1,
-                text: "O conceito de 'Cultura Justa' (Just Culture) no âmbito da Segurança Operacional (SGSO) estabelece que:",
-                options: ["Erros reportados voluntariamente sem intenção dolosa não devem sofrer punição punitiva arbitrária", "Todo erro humano deve ser punido com cassação da carteira", "Erros graves devem ser ocultados da fiscalização", "Somente pilotos podem emitir Relatos de Prevenção"],
-                correct: 0,
-                explanation: "A Cultura Justa encoraja o relato voluntário de falhas para aprendizado sem medo de punição por erros honestos."
-            },
-            {
-                blockIndex: 1,
-                text: "Para manter válidas as suas prerrogativas de licença e atuar na manutenção, o MMA deve comprovar experiência prática de pelo menos:",
-                options: ["6 meses nos últimos 24 meses", "12 meses nos últimos 12 meses", "1 mês a cada 5 anos", "Não há exigência de experiência recente"],
-                correct: 0,
-                explanation: "O RBAC 65 estabelece a obrigatoriedade de ter atuado na manutenção por pelo menos 6 meses dentro dos últimos 24 meses."
-            },
-            {
-                blockIndex: 1,
-                text: "O documento formal assinado por um mecânico habilitado certificando que os serviços de manutenção foram executados segundo os dados aprovados é o:",
-                options: ["Manifesto de Carga", "Certificado de Liberação para Serviço (CLS)", "Plano de Voo", "Certificado de Matrícula"],
-                correct: 1,
-                explanation: "O CLS atesta que a manutenção foi concluída conforme os manuais e regulamentos aeronáuticos aplicáveis."
-            },
-            {
-                blockIndex: 1,
-                text: "Qual das seguintes organizações no Brasil é responsável pela investigação de acidentes aeronáuticos civis e militares (SIPAER)?",
-                options: ["DECEA", "CENIPA", "INFRAERO", "ANAC"],
-                correct: 1,
-                explanation: "O CENIPA (Centro de Investigação e Prevenção de Acidentes Aeronáuticos) executa investigações focadas na prevenção de novos acidentes."
-            },
-            {
-                blockIndex: 1,
-                text: "As publicações emitidas pelos FABRICANTES com caráter de recomendação técnica ou modificação voluntária na aeronave são os:",
-                options: ["RBACs", "Boletins de Serviço (Service Bulletins - SB)", "Instruções Suplementares (IS)", "NOTAMs"],
-                correct: 1,
-                explanation: "O Service Bulletin (SB) é emitido pelo fabricante para orientar melhorias ou modificações."
-            },
-            {
-                blockIndex: 1,
-                text: "No estudo dos Fatores Humanos em manutenção (Modelo SHELL), a letra 'L' duplicada refere-se às interações entre:",
-                options: ["Liveware (Homem) com Liveware (Homem)", "Liveware (Homem) com Logic", "Lighting e Location", "Leadership e Loyalty"],
-                correct: 0,
-                explanation: "A relação Liveware-Liveware no modelo SHELL aborda o trabalho em equipe, comunicação e liderança interpessoal."
-            },
-            {
-                blockIndex: 1,
-                text: "A convenção internacional que criou a OACI/ICAO em 1944 e definiu as bases da aviação civil internacional foi a Convenção de:",
-                options: ["Genebra", "Chicago", "Varsóvia", "Tóquio"],
-                correct: 1,
-                explanation: "A Convenção de Chicago (1944) é o tratado fundador da aviação civil moderna internacional."
-            },
-            {
-                blockIndex: 1,
-                text: "A habilitação de MMA que concede prerrogativas para manutenção em estruturas, fuselagem, trem de pouso e sistemas hidráulicos/pneumáticos é a de:",
-                options: ["Grupo Motores (GMP)", "Avionics (AVI)", "Célula (CEL)", "Estruturas Especiais"],
-                correct: 2,
-                explanation: "A carteira de Célula (CEL) abrange a estrutura da aeronave e todos os seus sistemas associados, exceto motor e aviônicos avançados."
-            },
-            {
-                blockIndex: 1,
-                text: "As Instruções Suplementares (IS) são documentos normativos da ANAC destinados a:",
-                options: ["Substituir a legislação federal", "Esclarecer e guiar o cumprimento das exigências dos RBACs", "Impor penalidades a mecânicos", "Aprovar projetos de aeroportos"],
-                correct: 1,
-                explanation: "As Instruções Suplementares fornecem caminhos aceitáveis de conformidade para atender às exigências dos RBACs."
-            },
-            {
-                blockIndex: 1,
-                text: "Nos Fatores Humanos em aviação, a lista conhecida como 'Dirty Dozen' (Os Doze Sujos) refere-se aos:",
-                options: ["12 produtos químicos mais tóxicos na oficina", "12 erros humanos mais comuns que levam a acidentes na manutenção", "12 manuais obrigatórios a bordo", "12 ferramentas proibidas no hangar"],
-                correct: 1,
-                explanation: "O 'Dirty Dozen' elenca as 12 pré-condições humanas (fADIGA, falta de comunicação, estresse, complacência, etc.) causadoras de falhas."
-            },
-            {
-                blockIndex: 1,
-                text: "O registro legal de porte obrigatório a bordo da aeronave onde são anotados tempos de voo, pousos e intervenções de manutenção é o:",
-                options: ["Diário de Bordo", "Manual de Operações", "Certificado de Registro", "Livro de Hangar"],
-                correct: 0,
-                explanation: "O Diário de Bordo possui valor jurídico e registra o histórico de operação e liberações técnicas da aeronave."
-            },
-            {
-                blockIndex: 1,
-                text: "A autorização emitida pela ANAC que aprova uma alteração de grande porte no projeto de uma aeronave já certificada é o:",
-                options: ["CBR", "CHVT (Certificado de Homologação de Tipo)", "CST (Certificado Suplementar de Tipo)", "IAM"],
-                correct: 2,
-                explanation: "O CST (STC em inglês) aprova modificações substanciais em relação ao projeto de tipo original."
-            },
-            {
-                blockIndex: 1,
-                text: "Em caso de fadiga excessiva ou estresse severo de um mecânico durante uma inspeção crítica, a atitude alinhada com o SGSO é:",
-                options: ["Continuar o trabalho rapidamente para ir embora", "Aplicar a autoavaliação e paralisar a tarefa avisando a supervisão", "Ignorar os sintomas e ingerir estimulantes", "Assinar o trabalho sem checar"],
-                correct: 1,
-                explanation: "Reconhecer limitações físicas/mentais e pausar a tarefa é um princípio fundamental de segurança e fatores humanos."
-            },
-            {
-                blockIndex: 1,
-                text: "Qual regulamento brasileiro (RBAC) estabelece as regras para Certificação de Oficinas de Manutenção Aeronáutica?",
-                options: ["RBAC 43", "RBAC 65", "RBAC 145", "RBAC 91"],
-                correct: 2,
-                explanation: "O RBAC 145 define todos os requisitos operacionais e de qualidade para oficinas de manutenção homologadas."
-            },
-            {
-                blockIndex: 1,
-                text: "A notificação compulsória rápida emitida sobre perigos imediatos na navegação aérea ou em aeródromos é o:",
-                options: ["METAR", "NOTAM", "TAF", "AIS"],
-                correct: 1,
-                explanation: "NOTAM (Notice to Airmen) comunica dados temporários ou urgentes de interesse da segurança operacional."
-            },
+      <div class="nav-tabs">
+        <button id="tabBtnSimulado" class="tab-btn active" onclick="switchMainTab('simulado')">📑 Simulado</button>
+        <button id="tabBtnDesempenho" class="tab-btn" onclick="switchMainTab('desempenho')">📈 Desempenho</button>
+      </div>
+    </div>
+  </header>
 
-            // ================= BLOCO 3: CONHECIMENTOS BÁSICOS DE MANUTENÇÃO, MATERIAIS, TUBULAÇÕES, PESO E BALANCEAMENTO, INGLÊS TÉCNICO & SOCORROS =================
-            {
-                blockIndex: 2,
-                text: "Em operações de Peso e Balanceamento de aeronaves, o plano vertical imaginário a partir do qual todas as distâncias horizontais (braços) são medidas chama-se:",
-                options: ["Linha de Centro", "Datum (Linha de Referência Zero)", "Macaxeira", "Estação Média do Aerofólio"],
-                correct: 1,
-                explanation: "O Datum é o plano de referência zero fixado pelo fabricante para calcular os momentos de peso."
-            },
-            {
-                blockIndex: 2,
-                text: "Nas tubulações rígidas de combustível de aeronaves, o código visual de identificação normatizado utiliza a cor e símbolo:",
-                options: ["Amarelo com triângulos", "Vermelho com o símbolo de combustível (Fuel)", "Azul com círculos", "Verde com listras"],
-                correct: 1,
-                explanation: "A fita de identificação de combustível é padronizada na cor vermelha com a palavra FUEL e símbolos."
-            },
-            {
-                blockIndex: 2,
-                text: "As conexões hidráulicas aeronáuticas do tipo AN possuem o ângulo de cônico/flange de efervazamento exatamente de:",
-                options: ["30 graus", "37 graus", "45 graus", "90 graus"],
-                correct: 1,
-                explanation: "As conexões AN (Army-Navy) utilizam ângulo de flangeamento de 37°, diferindo das industriais de 45°."
-            },
-            {
-                blockIndex: 2,
-                text: "Na terminologia do inglês técnico de manutenção aeronáutica, o termo 'Troubleshooting' significa:",
-                options: ["Substituição de peças", "Pesquisa e localização de falhas/defeitos", "Lavagem de componentes", "Aperto de parafusos"],
-                correct: 1,
-                explanation: "'Troubleshooting' é a investigação sistemática para diagnosticar a causa raiz de uma anomalia mecânica ou elétrica."
-            },
-            {
-                blockIndex: 2,
-                text: "O momento em peso e balanceamento de uma aeronave é obtido matematicamente pela fórmula:",
-                options: ["Momento = Peso / Braço", "Momento = Peso x Braço", "Momento = Densidade x Volume", "Momento = Tração / Arrastar"],
-                correct: 1,
-                explanation: "Momento é o produto da massa (Peso) pela distância até o Datum (Braço): M = P x d."
-            },
-            {
-                blockIndex: 2,
-                text: "Ao realizar a frenagem de segurança com arame de trava (safety wire) em dois parafusos, o arame deve ser trançado de modo que o aperto tenda a:",
-                options: ["Afrouxar ambos os parafusos", "Tracionar os parafusos no sentido de APERTO", "Torcer a cabeça do parafuso", "Cortar a rosca"],
-                correct: 1,
-                explanation: "O arame de trava deve sempre exercer tensão que force o fixador a permanecer apertado."
-            },
-            {
-                blockIndex: 2,
-                text: "A corrosão que ocorre na junção de dois metais com potenciais eletroquímicos diferentes em presença de um eletrólito é a corrosão:",
-                options: ["Por pite", "Intergranular", "Galvânica", "Por atrito (fretting)"],
-                correct: 2,
-                explanation: "A corrosão galvânica é acelerada pelo contato direto de metais dissimilares expostos à umidade/eletrólito."
-            },
-            {
-                blockIndex: 2,
-                text: "Em primeiros socorros em ambiente de hangar, no atendimento a uma vítima com queimadura de 2º grau por fluido quente, a conduta inicial correta é:",
-                options: ["Aplicar graxa ou manteiga sobre o local", "Arrefecer a região com água limpa corrente e cobrir com pano limpo", "Rupturar as bolhas imediatamente", "Esfregar com álcool concentrado"],
-                correct: 1,
-                explanation: "Esfriar com água corrente em abundância alivia a dor e impede a progressão do dano térmico nos tecidos."
-            },
-            {
-                blockIndex: 2,
-                text: "Na especificação padronizada ATA 100, o Capítulo ATA 24 abrange a documentação e manutenção do sistema:",
-                options: ["Hidráulico", "Elétrico (Electrical Power)", "Comandos de Voo", "Combustível"],
-                correct: 1,
-                explanation: "Na norma ATA 100, o capítulo 24 é reservado universalmente para o Sistema de Energia Elétrica."
-            },
-            {
-                blockIndex: 2,
-                text: "No inglês técnico, a frase 'Inspect fuel lines for leaks and chafing' instrui o mecânico a:",
-                options: ["Trocar as linhas de combustível imediatamente", "Inspecionar as tubulações de combustível quanto a vazamentos e atrito/roçamento", "Pintar as tubulações de combustível", "Drenar a água do tanque"],
-                correct: 1,
-                explanation: "'Leaks' refere-se a vazamentos e 'Chafing' ao desgaste causado por atrito entre linhas ou estruturas."
-            },
-            {
-                blockIndex: 2,
-                text: "As mangueiras flexíveis sintéticas com tubo interno de Teflon (PTFE) e malha trançada de aço inox são indicadas para sistemas de alta pressão e fluidos agressivos como o:",
-                options: ["Gasolina de Aviação (AVGAS)", "Skydrol (fluido hidráulico sintético)", "Óleo mineral simples", "Água desmineralizada"],
-                correct: 1,
-                explanation: "O Skydrol corrói borrachas comuns; exige mangueiras flexíveis resistentes de Teflon reforçado com aço inoxidável."
-            },
-            {
-                blockIndex: 2,
-                text: "O ensaio não destrutivo (END) por Líquido Penetrante é aplicável para detectar descontinuidades superficiais em:",
-                options: ["Materiais não porosos (metálicos e não metálicos)", "Apenas materiais ferromagnéticos", "Apenas em peças de madeira", "Estruturas internas ocas"],
-                correct: 0,
-                explanation: "O ensaio de líquido penetrante revela trincas abertas para a superfície em materiais sólidos não porosos."
-            },
-            {
-                blockIndex: 2,
-                text: "A operação de remoção de bolhas de ar retidas no fluido de um sistema hidráulico de freios da aeronave é chamada de:",
-                options: ["Pressurização", "Sangria (Bleeding)", "Flushing", "Calibração"],
-                correct: 1,
-                explanation: "Sangria (Bleeding) é o procedimento para expelir o ar aprisionado nas tubulações do sistema hidráulico."
-            },
-            {
-                blockIndex: 2,
-                text: "O tratamento químico de anotação superficial no alumínio que cria uma camada protetora passiva contra corrosão chama-se:",
-                options: ["Galvanização", "Anodização (ou Alodine)", "Cementação", "Têmpera"],
-                correct: 1,
-                explanation: "A anodização e o tratamento com Alodine convertem a superfície do alumínio em um filme resistente à corrosão."
-            },
-            {
-                blockIndex: 2,
-                text: "Um parafuso aeronáutico da série AN com marcação de um traço em relevo (-) na cabeça indica ser fabricado em:",
-                options: ["Alumínio 2024", "Aço inoxidável resistente à corrosão (Cres)", "Aço liga cadmiado", "Latão"],
-                correct: 1,
-                explanation: "O traço simples em relevo na cabeça do parafuso AN indica fabricação em aço inoxidável (Cres)."
-            },
-            {
-                blockIndex: 2,
-                text: "Em caso de incêndio de Classe C no hangar (equipamentos elétricos energizados), o extintor adequado e seguro é o de:",
-                options: ["Água pressurizada", "Dióxido de Carbono (CO2) ou Pó Químico Seco", "Espuma mecânica", "Solução ácida"],
-                correct: 1,
-                explanation: "Extintores de CO2 e Pó Químico não conduzem eletricidade, sendo indicados para fogos em circuitos elétricos energizados (Classe C)."
-            },
-            {
-                blockIndex: 2,
-                text: "No balanceamento de uma aeronave, o Peso Operacional em Vazio (Basic Empty Weight) engloba:",
-                options: ["Aeronave, combustível de viagem e passageiros", "Estrutura, motores, equipamentos fixos e fluidos não drenáveis", "Apenas o peso das asas", "Carga paga máxima"],
-                correct: 1,
-                explanation: "O Peso em Vazio contempla a estrutura básica e fluídos permanentes retidos nos sistemas."
-            },
-            {
-                blockIndex: 2,
-                text: "No inglês técnico aeronáutico, o componente denominado 'Fastener' refere-se genericamente a um:",
-                options: ["Filtro de combustível", "Elemento de fixação (parafuso, rivete, trava)", "Motor elétrico", "Radiador de óleo"],
-                correct: 1,
-                explanation: "'Fastener' é o termo amplo que abrange parafusos, porcas, rebites e elementos de união mecânica."
-            },
-            {
-                blockIndex: 2,
-                text: "O manual do fabricante que traz as vistas explodidas e os números de catálogo de todas as peças de reposição da aeronave é o:",
-                options: ["AMM (Aircraft Maintenance Manual)", "IPC (Illustrated Parts Catalog)", "CMM (Component Maintenance Manual)", "WDM (Wiring Diagram Manual)"],
-                correct: 1,
-                explanation: "O IPC (Catálogo Ilustrado de Peças) lista visualmente todas as peças com seus respetivos P/N (Part Numbers)."
-            },
-            {
-                blockIndex: 2,
-                text: "Ao utilizar oxigênio gasoso na aviação, é rigorosamente PROIBIDO o uso de óleos ou graxas orgânicas nas conexões devido ao risco de:",
-                options: ["Vazamento de hélio", "Combustão espontânea e explosão violenta", "Congelamento da válvula", "Oxidação do tubo"],
-                correct: 1,
-                explanation: "Hidrocarbonetos (óleo/graxa) entram em ignição e explosão espontânea na presença de oxigênio puro sob pressão."
-            }
-        ];
+  <div class="container">
 
-        /* ==========================================================================
-           STATE MANAGEMENT
-           ========================================================================== */
-        let state = {
-            candidate: {
-                name: '',
-                canac: '',
-                ciac: '',
-                photoUrl: 'https://placehold.co/100x100/1e293b/94a3b8?text=OACI+Foto'
-            },
-            examMode: 'prova', // 'prova' or 'estudo'
-            isFullExam: true,
-            currentBlockIndex: 0,
-            currentQuestionIndex: 0,
-            timeRemaining: 30 * 60,
-            timerInterval: null,
-            // Dynamic exam data (populated on randomization)
-            activeExamBlocks: [], // Holds the 20 randomized questions per block
-            answers: {}, // Key `${bIdx}_${qIdx}` => selected option index
-            flags: {},   // Key `${bIdx}_${qIdx}` => boolean
-            completedBlocks: [false, false, false],
-            blockTimeSpent: [0, 0, 0]
+    <!-- TELA 1: IDENTIFICAÇÃO E CONFIGURAÇÃO -->
+    <div id="screenSetup" class="setup-grid">
+      
+      <!-- CARD PRINCIPAL DE IDENTIFICAÇÃO DO CANDIDATO -->
+      <div class="card card-identificacao">
+        <div class="card-header-identifica">
+          <div class="icon-badge">🪪</div>
+          <div>
+            <h2>Identificação do Candidato ANAC</h2>
+            <p>Preencha os dados do seu cadastro SACI/FGV para iniciar a banca.</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">NOME COMPLETO DO CANDIDATO *</label>
+          <input type="text" id="inputNome" class="form-input" value="allan" placeholder="Ex: Roberto Carlos da Silva" oninput="updateUserHeader()">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">CÓDIGO CANAC (6 DÍGITOS) *</label>
+            <input type="text" id="inputCANAC" class="form-input" value="123456" maxlength="6" placeholder="Ex: 123456" oninput="updateUserHeader()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CIAC HOMOLOGADO *</label>
+            <select class="form-select">
+              <option>AEROTD - Faculdade e Escola de Aviação</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- FOTO DE IDENTIFICAÇÃO (PADRÃO OACI FUNCIONAL) -->
+        <div class="form-group" style="margin-bottom: 0.85rem;">
+          <label class="form-label">FOTO DE IDENTIFICAÇÃO (PADRÃO OACI)</label>
+          <div class="oaci-upload-box">
+            <div class="oaci-preview" id="oaciPreviewBox">OACI Foto</div>
+            <div class="oaci-actions">
+              <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+              <button class="btn-upload-photo" onclick="document.getElementById('photoInput').click()">📷 Carregar Foto do Aluno</button>
+              <div class="oaci-status" id="oaciStatusText">Sistema SACI: <span>✔ Foto Validada OACI</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODALIDADE DE SIMULADO -->
+        <div class="form-group" style="margin-bottom: 1.1rem;">
+          <label class="form-label">MODALIDADE DE SIMULADO</label>
+          <div class="mode-grid">
+            <div id="modeCardProva" class="mode-card active" onclick="setExamMode('prova')">
+              <h4>Modo Prova Real ⏱️</h4>
+              <p>30 min por bloco, cronômetro regressivo e sem gabarito prévio.</p>
+            </div>
+            <div id="modeCardEstudo" class="mode-card" onclick="setExamMode('estudo')">
+              <h4>Modo Estudo 🎓</h4>
+              <p>Feedback e explicação do gabarito imediatamente a cada resposta.</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-start-banca" onclick="startFullBanca()">
+          ► INICIAR BANCA COMPLETA (60 QUESTÕES RANDOMIZADAS)
+        </button>
+      </div>
+
+      <!-- PAINEL LATERAL (ESTRUTURA + MATÉRIAS INDIVIDUAIS) -->
+      <div>
+        <div class="card" style="margin-bottom: 1.25rem;">
+          <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; font-weight: 700;">📖 Estrutura do Módulo Básico MMA</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">A prova teórica oficial para Mecânico de Manutenção Aeronáutica é composta por 3 blocos de matérias sorteadas do banco de dados oficial:</p>
+
+          <div style="font-size: 0.8rem; padding: 0.65rem; background: var(--input-bg); border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid var(--primary-blue);">
+            <strong style="color: white;">Bloco 1 (20 Questões)</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.74rem;">Ciências Naturais, Matemática, Física/Química, Metrologia, Desenho Técnico e Eletricidade Básica.</span>
+          </div>
+
+          <div style="font-size: 0.8rem; padding: 0.65rem; background: var(--input-bg); border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid #0284c7;">
+            <strong style="color: white;">Bloco 2 (20 Questões)</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.74rem;">Regulamentação da Aviação Civil, CBA, Segurança Operacional (SGSO), Fatores Humanos e Legislação.</span>
+          </div>
+
+          <div style="font-size: 0.8rem; padding: 0.65rem; background: var(--input-bg); border-radius: 6px; margin-bottom: 1rem; border-left: 3px solid var(--success-green);">
+            <strong style="color: white;">Bloco 3 (20 Questões)</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.74rem;">Práticas de Manutenção, Materiais, Corrosão, Tubulações, Peso e Balanceamento, Combustíveis, Inglês Técnico e Primeiros Socorros.</span>
+          </div>
+
+          <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.75rem; border-radius: 8px; font-size: 0.78rem; color: #fcd34d;">
+            ⚠️ <b>Critério de Aprovação ANAC:</b> É necessário alcançar no mínimo <b>70% de acertos (14 de 20 questões)</b> em CADA UM dos 3 blocos individualmente para ser aprovado na banca.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; letter-spacing: 0.5px;">TREINAR MATÉRIA ESPECÍFICA</h3>
+          <button class="btn-block-train" onclick="startSingleBlock(1)"><span>⚙️ Treinar Apenas Bloco 1</span> ➔</button>
+          <button class="btn-block-train" onclick="startSingleBlock(2)"><span>⚖️ Treinar Apenas Bloco 2</span> ➔</button>
+          <button class="btn-block-train" onclick="startSingleBlock(3)"><span>🔧 Treinar Apenas Bloco 3</span> ➔</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TELA 2: EXECUÇÃO DO SIMULADO -->
+    <div id="screenExam" class="hidden">
+      <div class="block-header-card">
+        <div>
+          <span class="tag-block" id="blockBadge">BLOCO 1 DE 3</span>
+          <h2 id="blockTitleText" style="font-size: 1.1rem; margin-top: 0.25rem;">Bloco 1: Ciências Naturais, Matemática & Física</h2>
+        </div>
+        <div class="timer-card">
+          <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">TEMPO DO BLOCO</div>
+          <div class="time" id="timerDisplay">29:59</div>
+        </div>
+      </div>
+
+      <div class="exam-grid">
+        <div class="question-card">
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem;">
+              Questão <span id="qCurrentIndex" style="color: white;">1</span> de <span id="qTotalCount">20</span>
+            </div>
+            <div id="qStatement" style="font-size: 1.05rem; font-weight: 500; margin-bottom: 1.5rem; line-height: 1.6;"></div>
+            <div id="optionsContainer"></div>
+            <div id="studyFeedbackBox" class="hidden" style="background: #1e293b; border-left: 4px solid var(--primary-blue); padding: 1rem; border-radius: 6px; font-size: 0.88rem; margin-top: 1rem;"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--card-border); padding-top: 1.25rem; margin-top: 1.5rem;">
+            <button class="form-input" style="width: auto; padding: 0.6rem 1.2rem; background: #1e293b;" onclick="prevQuestion()">Anterior</button>
+            <button class="form-input" style="width: auto; padding: 0.6rem 1.2rem; background: var(--primary-blue);" onclick="nextQuestion()">Próxima</button>
+          </div>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h4 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">MAPA DE QUESTÕES</h4>
+            <div class="q-map-grid" id="qMapGrid"></div>
+          </div>
+          <button class="btn-start-banca" style="background: var(--success-green);" onclick="finishBlock()">Submeter Bloco Atual</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA 3: PAINEL DE DESEMPENHO -->
+    <div id="screenDesempenho" class="card hidden">
+      <h2>Painel Geral de Desempenho do Candidato</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Acompanhamento das avaliações registradas por CANAC.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: var(--input-bg); border: 1px solid var(--card-border); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Total de Simulados</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-blue);" id="dashTotalExams">0</div>
+        </div>
+        <div style="background: var(--input-bg); border: 1px solid var(--card-border); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Aproveitamento Geral</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-blue);" id="dashAvgScore">0%</div>
+        </div>
+        <div style="background: var(--input-bg); border: 1px solid var(--card-border); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Aprovações</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--success-green);" id="dashPassCount">0</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 0.95rem; margin-bottom: 0.75rem;">Histórico de Tentativas</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--card-border); color: var(--text-muted);">
+            <th style="padding: 0.6rem;">Data/Hora</th>
+            <th style="padding: 0.6rem;">Módulo / Bloco</th>
+            <th style="padding: 0.6rem;">Acertos</th>
+            <th style="padding: 0.6rem;">Resultado</th>
+          </tr>
+        </thead>
+        <tbody id="dashHistoryBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    const questionDatabase = {
+      1: [
+        { id: 101, text: "Uma alavanca na qual o ponto de apoio (fulcro) situa-se entre a aplicação da força potente e a força resistente é classificada como:", options: ["Binária", "Interfixa", "Interpotente", "Inter-resistente"], correct: 1, explanation: "Alavancas interfixas possuem o ponto de apoio situado entre a força potente e a força resistente." },
+        { id: 102, text: "Qual é a unidade de medida de força no Sistema Internacional (SI)?", options: ["Joule", "Newton", "Watt", "Pascal"], correct: 1, explanation: "No SI, a unidade oficial de força é o Newton (N)." }
+      ],
+      2: [
+        { id: 201, text: "De acordo com o RBAC 65, qual é a validade da licença de Mecânico de Manutenção Aeronáutica (MMA)?", options: ["2 anos", "5 anos", "Indeterminada", "10 anos"], correct: 2, explanation: "A licença ANAC possui caráter permanente (validade indeterminada)." }
+      ],
+      3: [
+        { id: 301, text: "Qual ferramenta é apropriada para medir a folga interna entre anéis de pistão?", options: ["Micrômetro", "Calibre de folga (sinta)", "Paquímetro", "Relógio comparador"], correct: 1, explanation: "O calibre de folga é projetado para medições de folgas ajustadas." }
+      ]
+    };
+
+    let selectedMode = 'prova';
+    let examType = 'banca';
+    let currentBlock = 1;
+    let questions = [];
+    let currentQIndex = 0;
+    let userAnswers = {};
+    let timerInterval = null;
+    let timeLeft = 1800;
+
+    window.onload = function() {
+      const savedPhoto = localStorage.getItem('anac_user_photo');
+      if (savedPhoto) {
+        applyUserPhoto(savedPhoto);
+      }
+      updateUserHeader();
+      loadDashboard();
+    };
+
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64Image = e.target.result;
+          localStorage.setItem('anac_user_photo', base64Image);
+          applyUserPhoto(base64Image);
         };
+        reader.readAsDataURL(file);
+      }
+    }
 
-        const STORAGE_KEY = 'anac_mma_simulado_history_v1';
+    function applyUserPhoto(imgSrc) {
+      // Atualiza a prévia do formulário
+      const previewBox = document.getElementById('oaciPreviewBox');
+      previewBox.innerHTML = `<img src="${imgSrc}" alt="Foto OACI">`;
+      
+      // Atualiza o avatar no topo direito do header
+      const avatarCircle = document.getElementById('userAvatar');
+      avatarCircle.innerHTML = `<img src="${imgSrc}" alt="Avatar">`;
+    }
 
-        /* ==========================================================================
-           NAVIGATION TABS & DASHBOARD CONTROLLER
-           ========================================================================== */
-        function switchTab(tabName) {
-            const btnExam = document.getElementById('tabBtnExam');
-            const btnDash = document.getElementById('tabBtnDashboard');
+    function setExamMode(mode) {
+      selectedMode = mode;
+      document.getElementById('modeCardProva').classList.toggle('active', mode === 'prova');
+      document.getElementById('modeCardEstudo').classList.toggle('active', mode === 'estudo');
+    }
 
-            if (tabName === 'dashboard') {
-                btnDash.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-400 bg-blue-950/60 border border-blue-800";
-                btnExam.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800";
-                showScreen('dashboardScreen');
-                loadAndRenderDashboard();
-            } else {
-                btnExam.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-400 bg-blue-950/60 border border-blue-800";
-                btnDash.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800";
-                
-                if (state.completedBlocks.some(b => b)) {
-                    showScreen('resultScreen');
-                } else if (state.activeExamBlocks.length > 0) {
-                    showScreen('examScreen');
-                } else {
-                    showScreen('welcomeScreen');
-                }
-            }
+    function updateUserHeader() {
+      const nome = document.getElementById('inputNome').value.trim() || 'allan';
+      const canac = document.getElementById('inputCANAC').value.trim() || '123456';
+      document.getElementById('dispUserName').innerText = nome;
+      document.getElementById('dispUserCANAC').innerText = `CANAC: ${canac}`;
+      
+      // Se não houver foto personalizada carregada, exibe as iniciais no avatar
+      if (!localStorage.getItem('anac_user_photo')) {
+        document.getElementById('userAvatar').innerText = nome.substring(0, 2).toUpperCase();
+      }
+    }
+
+    function switchMainTab(tab) {
+      document.getElementById('tabBtnSimulado').classList.toggle('active', tab === 'simulado');
+      document.getElementById('tabBtnDesempenho').classList.toggle('active', tab === 'desempenho');
+      
+      document.getElementById('screenSetup').classList.toggle('hidden', tab !== 'simulado' || questions.length > 0);
+      document.getElementById('screenExam').classList.toggle('hidden', tab !== 'simulado' || questions.length === 0);
+      document.getElementById('screenDesempenho').classList.toggle('hidden', tab !== 'desempenho');
+
+      if (tab === 'desempenho') loadDashboard();
+    }
+
+    function startFullBanca() {
+      updateUserHeader();
+      examType = 'banca';
+      currentBlock = 1;
+      initExamSession();
+    }
+
+    function startSingleBlock(bNum) {
+      updateUserHeader();
+      examType = 'bloco';
+      currentBlock = bNum;
+      initExamSession();
+    }
+
+    function initExamSession() {
+      userAnswers = {};
+      currentQIndex = 0;
+      let pool = [...(questionDatabase[currentBlock] || questionDatabase[1])];
+      while (pool.length < 20) pool = pool.concat(pool);
+      questions = pool.slice(0, 20).sort(() => Math.random() - 0.5);
+
+      document.getElementById('screenSetup').classList.add('hidden');
+      document.getElementById('screenExam').classList.remove('hidden');
+
+      startTimer();
+      renderQuestion();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timeLeft = 1800;
+      const timerElem = document.getElementById('timerDisplay');
+
+      if (selectedMode === 'estudo') {
+        timerElem.innerText = "LIVRE";
+        return;
+      }
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const min = Math.floor(timeLeft / 60);
+        const sec = timeLeft % 60;
+        timerElem.innerText = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          finishBlock();
+        }
+      }, 1000);
+    }
+
+    function renderQuestion() {
+      const q = questions[currentQIndex];
+      
+      if (examType === 'banca') {
+        document.getElementById('blockBadge').innerText = `BLOCO ${currentBlock} DE 3`;
+      } else {
+        document.getElementById('blockBadge').innerText = `BLOCO INDIVIDUAL ${currentBlock}`;
+      }
+      document.getElementById('blockTitleText').innerText = getBlockFullName(currentBlock);
+
+      document.getElementById('qCurrentIndex').innerText = currentQIndex + 1;
+      document.getElementById('qTotalCount').innerText = questions.length;
+      document.getElementById('qStatement').innerText = q.text;
+
+      const container = document.getElementById('optionsContainer');
+      container.innerHTML = '';
+      const letters = ['A', 'B', 'C', 'D'];
+      const selected = userAnswers[currentQIndex];
+
+      q.options.forEach((optText, idx) => {
+        const item = document.createElement('div');
+        item.className = 'option-item';
+        if (selected === idx) item.classList.add('selected');
+
+        if (selectedMode === 'estudo' && selected !== undefined) {
+          if (idx === q.correct) item.classList.add('correct');
+          else if (selected === idx) item.classList.add('wrong');
         }
 
-        function showScreen(screenId) {
-            document.getElementById('welcomeScreen').classList.add('hidden');
-            document.getElementById('examScreen').classList.add('hidden');
-            document.getElementById('resultScreen').classList.add('hidden');
-            document.getElementById('dashboardScreen').classList.add('hidden');
-
-            document.getElementById(screenId).classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        /* ==========================================================================
-           LOCALSTORAGE & DASHBOARD ANALYTICS ENGINE
-           ========================================================================== */
-        function getExamHistory() {
-            try {
-                const data = localStorage.getItem(STORAGE_KEY);
-                return data ? JSON.parse(data) : [];
-            } catch (e) {
-                console.error("Erro ao ler histórico de simulados:", e);
-                return [];
-            }
-        }
-
-        function saveExamResultToHistory(resultData) {
-            try {
-                const history = getExamHistory();
-                history.unshift(resultData); // Newest first
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-            } catch (e) {
-                console.error("Erro ao salvar resultado do simulado:", e);
-            }
-        }
-
-        function clearHistoryConfirm() {
-            showModal("Limpar Histórico?", "Deseja apagar todo o seu histórico de simulados salvos neste navegador?", () => {
-                localStorage.removeItem(STORAGE_KEY);
-                loadAndRenderDashboard();
-            });
-        }
-
-        function loadAndRenderDashboard() {
-            const history = getExamHistory();
-            
-            const kpiTotalExams = document.getElementById('kpiTotalExams');
-            const kpiPassRate = document.getElementById('kpiPassRate');
-            const kpiAvgScore = document.getElementById('kpiAvgScore');
-            const kpiTrend = document.getElementById('kpiTrend');
-
-            if (history.length === 0) {
-                kpiTotalExams.innerText = "0";
-                kpiPassRate.innerText = "0%";
-                kpiAvgScore.innerText = "0.0 / 20";
-                kpiTrend.innerHTML = '<span class="text-slate-500 text-sm font-normal">Sem registros</span>';
-
-                document.getElementById('dashBlock0Percent').innerText = "0% (0/20)";
-                document.getElementById('dashBlock0Bar').style.width = "0%";
-                document.getElementById('dashBlock1Percent').innerText = "0% (0/20)";
-                document.getElementById('dashBlock1Bar').style.width = "0%";
-                document.getElementById('dashBlock2Percent').innerText = "0% (0/20)";
-                document.getElementById('dashBlock2Bar').style.width = "0%";
-
-                document.getElementById('historyTableBody').innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center py-6 text-slate-500 text-xs">Nenhum simulado concluído até o momento.</td>
-                    </tr>
-                `;
-                return;
-            }
-
-            kpiTotalExams.innerText = history.length;
-
-            let passedExamsCount = 0;
-            let totalCorrectSum = 0;
-            let totalAttemptedBlocksCount = 0;
-
-            let b0Sum = 0, b0Count = 0;
-            let b1Sum = 0, b1Count = 0;
-            let b2Sum = 0, b2Count = 0;
-
-            history.forEach(item => {
-                if (item.overallPassed) passedExamsCount++;
-
-                if (item.scores[0] !== null) { b0Sum += item.scores[0]; b0Count++; totalCorrectSum += item.scores[0]; totalAttemptedBlocksCount++; }
-                if (item.scores[1] !== null) { b1Sum += item.scores[1]; b1Count++; totalCorrectSum += item.scores[1]; totalAttemptedBlocksCount++; }
-                if (item.scores[2] !== null) { b2Sum += item.scores[2]; b2Count++; totalCorrectSum += item.scores[2]; totalAttemptedBlocksCount++; }
-            });
-
-            const passPercentage = Math.round((passedExamsCount / history.length) * 100);
-            kpiPassRate.innerText = `${passPercentage}%`;
-
-            const avgScoreVal = totalAttemptedBlocksCount > 0 ? (totalCorrectSum / totalAttemptedBlocksCount).toFixed(1) : "0.0";
-            kpiAvgScore.innerText = `${avgScoreVal} / 20`;
-
-            // Trend
-            if (history.length >= 2) {
-                const latest = (history[0].scores[0]||0) + (history[0].scores[1]||0) + (history[0].scores[2]||0);
-                const previous = (history[1].scores[0]||0) + (history[1].scores[1]||0) + (history[1].scores[2]||0);
-                if (latest > previous) {
-                    kpiTrend.innerHTML = '<span class="text-emerald-400 font-extrabold"><i class="fa-solid fa-arrow-trend-up"></i> Em alta</span>';
-                } else if (latest < previous) {
-                    kpiTrend.innerHTML = '<span class="text-red-400 font-extrabold"><i class="fa-solid fa-arrow-trend-down"></i> Em queda</span>';
-                } else {
-                    kpiTrend.innerHTML = '<span class="text-amber-400 font-extrabold"><i class="fa-solid fa-minus"></i> Estável</span>';
-                }
-            } else {
-                kpiTrend.innerHTML = '<span class="text-blue-400 text-sm font-semibold">Primeiros testes</span>';
-            }
-
-            // Subject Bar Graphs
-            const b0Avg = b0Count > 0 ? (b0Sum / b0Count) : 0;
-            const b1Avg = b1Count > 0 ? (b1Sum / b1Count) : 0;
-            const b2Avg = b2Count > 0 ? (b2Sum / b2Count) : 0;
-
-            const b0Pct = Math.round((b0Avg / 20) * 100);
-            const b1Pct = Math.round((b1Avg / 20) * 100);
-            const b2Pct = Math.round((b2Avg / 20) * 100);
-
-            document.getElementById('dashBlock0Percent').innerText = `${b0Pct}% (${b0Avg.toFixed(1)}/20)`;
-            document.getElementById('dashBlock0Bar').style.width = `${b0Pct}%`;
-
-            document.getElementById('dashBlock1Percent').innerText = `${b1Pct}% (${b1Avg.toFixed(1)}/20)`;
-            document.getElementById('dashBlock1Bar').style.width = `${b1Pct}%`;
-
-            document.getElementById('dashBlock2Percent').innerText = `${b2Pct}% (${b2Avg.toFixed(1)}/20)`;
-            document.getElementById('dashBlock2Bar').style.width = `${b2Pct}%`;
-
-            // Table Body
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-
-            history.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-900/60 transition";
-
-                const isAerotd = item.candidateCiac.includes("AEROTD");
-                const ciacBadge = isAerotd ? 
-                    `<span class="text-[10px] font-bold text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800 mr-1">AEROTD</span>` : '';
-
-                tr.innerHTML = `
-                    <td class="p-3 font-mono text-slate-400">${item.date}</td>
-                    <td class="p-3">
-                        <div class="font-bold text-white">${item.candidateName}</div>
-                        <div class="text-[11px] text-slate-400">${ciacBadge}${item.candidateCiac}</div>
-                    </td>
-                    <td class="p-3 text-center font-mono font-bold ${item.scores[0] >= 14 ? 'text-emerald-400' : 'text-red-400'}">
-                        ${item.scores[0] !== null ? `${item.scores[0]}/20` : '-'}
-                    </td>
-                    <td class="p-3 text-center font-mono font-bold ${item.scores[1] >= 14 ? 'text-emerald-400' : 'text-red-400'}">
-                        ${item.scores[1] !== null ? `${item.scores[1]}/20` : '-'}
-                    </td>
-                    <td class="p-3 text-center font-mono font-bold ${item.scores[2] >= 14 ? 'text-emerald-400' : 'text-red-400'}">
-                        ${item.scores[2] !== null ? `${item.scores[2]}/20` : '-'}
-                    </td>
-                    <td class="p-3 text-center font-mono font-black text-white">
-                        ${item.totalPercentage}%
-                    </td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 text-[10px] font-black rounded uppercase ${item.overallPassed ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'bg-red-950 text-red-300 border border-red-700'}">
-                            ${item.overallPassed ? 'APROVADO' : 'REPROVADO'}
-                        </span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        /* ==========================================================================
-           RESULT & CERTIFICATE GENERATOR WITH HISTORY SAVE
-           ========================================================================== */
-        function renderExamResults() {
-            // Update Candidate Data on Certificate
-            document.getElementById('certCandidateName').innerText = state.candidate.name || "Candidato ANAC";
-            document.getElementById('certCanac').innerText = state.candidate.canac || "------";
-            document.getElementById('certCiac').innerText = state.candidate.ciac || "CIAC N/A";
-            document.getElementById('certUserPhoto').src = state.candidate.photoUrl;
-
-            const now = new Date();
-            const formattedDate = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
-            document.getElementById('certDate').innerText = `Data do Exame: ${formattedDate}`;
-
-            const container = document.getElementById('blockResultsContainer');
-            container.innerHTML = '';
-
-            let overallPassed = true;
-            let totalCorrect = 0;
-            let totalQuestionsAttempted = 0;
-            const blockScores = [null, null, null];
-
-            state.activeExamBlocks.forEach((block, bIdx) => {
-                const isAttempted = state.completedBlocks[bIdx];
-                let correctCount = 0;
-
-                block.questions.forEach((q, qIdx) => {
-                    const ans = state.answers[`${bIdx}_${qIdx}`];
-                    if (ans === q.correct) {
-                        correctCount++;
-                    }
-                });
-
-                if (isAttempted) {
-                    blockScores[bIdx] = correctCount;
-                    totalCorrect += correctCount;
-                    totalQuestionsAttempted += block.questions.length;
-                }
-
-                const percentage = Math.round((correctCount / block.questions.length) * 100);
-                const isPassed = isAttempted && correctCount >= 14; // 14 out of 20 = 70% rule
-
-                if (isAttempted && !isPassed) {
-                    overallPassed = false;
-                }
-
-                // Score card element
-                const card = document.createElement('div');
-                card.className = "bg-slate-900 border border-slate-700/80 rounded-xl p-4 flex flex-col justify-between";
-                card.innerHTML = `
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-slate-800 text-slate-300">BLOCO ${bIdx + 1}</span>
-                            <span class="text-[11px] font-black px-2 py-0.5 rounded ${!isAttempted ? 'bg-slate-800 text-slate-400' : (isPassed ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'bg-red-950 text-red-300 border border-red-700')}">
-                                ${!isAttempted ? 'NÃO REALIZADO' : (isPassed ? 'APROVADO (>=70%)' : 'REPROVADO (<70%)')}
-                            </span>
-                        </div>
-                        <h4 class="font-bold text-white text-xs mb-1">${block.blockName}</h4>
-                        <div class="text-xs text-slate-400 mb-3">Pontuação: <strong class="text-white">${isAttempted ? `${correctCount} / 20` : '-'}</strong></div>
-                        <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
-                            <div class="h-2 ${isPassed ? 'bg-emerald-500' : 'bg-red-500'}" style="width: ${isAttempted ? percentage : 0}%"></div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-
-            // Overall Banner & Badge
-            const banner = document.getElementById('certBanner');
-            const badge = document.getElementById('certOverallBadge');
-            const title = document.getElementById('certBannerTitle');
-            const subtitle = document.getElementById('certBannerSubtitle');
-            const totalPercentDisplay = document.getElementById('certTotalPercentage');
-
-            const totalPercentage = totalQuestionsAttempted > 0 ? Math.round((totalCorrect / totalQuestionsAttempted) * 100) : 0;
-            totalPercentDisplay.innerText = `${totalPercentage}%`;
-
-            if (state.isFullExam && state.completedBlocks.every(b => b === true)) {
-                if (overallPassed) {
-                    banner.className = "p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500/50 flex flex-col sm:flex-row items-center justify-between gap-4";
-                    badge.className = "mt-1 px-4 py-1.5 text-xs font-black rounded-full uppercase tracking-wider bg-emerald-500 text-slate-950";
-                    badge.innerText = "APROVADO NA BANCA ANAC";
-                    title.innerText = "AEROCANDIDATO APROVADO!";
-                    subtitle.innerText = "Você atingiu o mínimo de 70% de acertos (14/20) em todos os 3 blocos do Módulo Básico, conforme os critérios da ANAC e Fundação Getulio Vargas.";
-                } else {
-                    banner.className = "p-6 rounded-2xl bg-red-950/60 border border-red-500/50 flex flex-col sm:flex-row items-center justify-between gap-4";
-                    badge.className = "mt-1 px-4 py-1.5 text-xs font-black rounded-full uppercase tracking-wider bg-red-500 text-white";
-                    badge.innerText = "REPROVADO / SEGUNDA ÉPOCA";
-                    title.innerText = "RETENÇÃO EM MATÉRIA ESPECÍFICA";
-                    subtitle.innerText = "Você não atingiu os 70% de acertos necessários em um ou mais blocos. A prova real exige aprovação individualizada em cada bloco.";
-                }
-            } else {
-                banner.className = "p-6 rounded-2xl bg-blue-950/60 border border-blue-500/50 flex flex-col sm:flex-row items-center justify-between gap-4";
-                badge.className = "mt-1 px-4 py-1.5 text-xs font-black rounded-full uppercase tracking-wider bg-blue-500 text-white";
-                badge.innerText = "SIMULADO PARCIAL";
-                title.innerText = "TREINAMENTO CONCLUÍDO";
-                subtitle.innerText = "Veja a sua pontuação parcial acima e estude a fundamentação técnica do gabarito abaixo.";
-            }
-
-            // Save attempt in localStorage
-            saveExamResultToHistory({
-                id: Date.now(),
-                date: formattedDate,
-                candidateName: state.candidate.name || "Candidato Autodidata",
-                candidateCanac: state.candidate.canac || "------",
-                candidateCiac: state.candidate.ciac || "CIAC N/A",
-                scores: blockScores,
-                totalPercentage: totalPercentage,
-                overallPassed: overallPassed && state.completedBlocks.every(b => b === true)
-            });
-
-            renderReviewQuestions();
-        }
-
-        /* ==========================================================================
-           GABARITO COMENTADO RENDERER
-           ========================================================================== */
-        function renderReviewQuestions() {
-            const list = document.getElementById('reviewQuestionsList');
-            const selectedFilter = document.getElementById('reviewBlockSelect').value;
-            list.innerHTML = '';
-
-            state.activeExamBlocks.forEach((block, bIdx) => {
-                if (selectedFilter !== 'all' && parseInt(selectedFilter) !== bIdx) {
-                    return;
-                }
-
-                if (!state.completedBlocks[bIdx] && selectedFilter === 'all') {
-                    return;
-                }
-
-                // Block Section Header
-                const header = document.createElement('div');
-                header.className = "pt-4 pb-2 text-xs font-black text-blue-400 border-b border-slate-700/80 flex items-center justify-between uppercase tracking-wider";
-                header.innerHTML = `
-                    <span>BLOCO ${bIdx + 1}: ${block.blockName}</span>
-                    <span class="text-slate-500 font-normal">20 Questões</span>
-                `;
-                list.appendChild(header);
-
-                block.questions.forEach((q, qIdx) => {
-                    const key = `${bIdx}_${qIdx}`;
-                    const userAns = state.answers[key];
-                    const isCorrect = userAns === q.correct;
-                    const isUnanswered = userAns === undefined;
-
-                    const qCard = document.createElement('div');
-                    qCard.className = `p-4 sm:p-5 rounded-xl border ${isCorrect ? 'bg-slate-900/80 border-slate-800' : (isUnanswered ? 'bg-slate-900/80 border-amber-900/40' : 'bg-red-950/20 border-red-900/40')} space-y-3`;
-
-                    let optionsHtml = '';
-                    q.options.forEach((optText, oIdx) => {
-                        const letter = String.fromCharCode(65 + oIdx);
-                        let optStyle = "text-slate-400";
-                        let badgeHtml = "";
-
-                        if (oIdx === q.correct) {
-                            optStyle = "text-emerald-300 font-bold";
-                            badgeHtml = `<span class="ml-2 text-[10px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-700">Gabarito Correto</span>`;
-                        }
-                        if (userAns === oIdx && !isCorrect) {
-                            optStyle = "text-red-400 font-semibold line-through";
-                            badgeHtml = `<span class="ml-2 text-[10px] bg-red-950 text-red-300 px-1.5 py-0.5 rounded border border-red-700">Sua Opção</span>`;
-                        } else if (userAns === oIdx && isCorrect) {
-                            badgeHtml += `<span class="ml-2 text-[10px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-700">Sua Opção (Correta)</span>`;
-                        }
-
-                        optionsHtml += `
-                            <div class="text-xs flex items-start space-x-2 ${optStyle}">
-                                <span class="font-bold">${letter})</span>
-                                <div>${optText} ${badgeHtml}</div>
-                            </div>
-                        `;
-                    });
-
-                    qCard.innerHTML = `
-                        <div class="flex items-start justify-between gap-3">
-                            <h5 class="text-sm font-semibold text-white">
-                                Questão ${qIdx + 1}. <span class="text-slate-200">${q.text}</span>
-                            </h5>
-                            <span class="text-[10px] font-black px-2 py-0.5 rounded flex-shrink-0 uppercase tracking-wider ${isCorrect ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : (isUnanswered ? 'bg-amber-950 text-amber-300 border border-amber-700' : 'bg-red-950 text-red-300 border border-red-700')}">
-                                ${isCorrect ? 'ACERTO' : (isUnanswered ? 'NÃO RESPONDIDA' : 'ERRO')}
-                            </span>
-                        </div>
-                        <div class="space-y-1.5 pl-2 border-l-2 border-slate-700">
-                            ${optionsHtml}
-                        </div>
-                        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
-                            <span class="font-bold text-blue-400"><i class="fa-solid fa-circle-info mr-1"></i> Fundamentação Técnica:</span>
-                            ${q.explanation}
-                        </div>
-                    `;
-                    list.appendChild(qCard);
-                });
-            });
-        }
-
-        /* ==========================================================================
-           EXPORT PDF CERTIFICATE
-           ========================================================================== */
-        function exportResultPDF() {
-            const element = document.getElementById('printableCertificate');
-            const opt = {
-                margin:       [0.3, 0.3, 0.3, 0.3],
-                filename:     `Comprovante_Simulado_ANAC_${state.candidate.canac || 'MMA'}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#1e293b' },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save();
-        }
-
-        /* ==========================================================================
-           MODALS & RESET ACTIONS
-           ========================================================================== */
-        let modalConfirmCallback = null;
-
-        function showModal(title, body, onConfirm) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerText = body;
-            modalConfirmCallback = onConfirm;
-
-            document.getElementById('modalOverlay').classList.remove('hidden');
-        }
-
-        document.getElementById('modalBtnCancel').onclick = function() {
-            document.getElementById('modalOverlay').classList.add('hidden');
-            modalConfirmCallback = null;
-        };
-
-        document.getElementById('modalBtnConfirm').onclick = function() {
-            document.getElementById('modalOverlay').classList.add('hidden');
-            if (modalConfirmCallback) {
-                modalConfirmCallback();
-                modalConfirmCallback = null;
-            }
-        };
-
-        function confirmResetExam() {
-            showModal("Sair e Reiniciar?", "Seu progresso atual na banca será zerado. Deseja retornar à tela inicial?", () => {
-                resetExamAnswers();
-                showScreen('welcomeScreen');
-            });
-        }
-
-        function restartExamWithNewRandomization() {
-            if (state.isFullExam) {
-                startNewFullExam();
-            } else {
-                quickStartBlock(state.currentBlockIndex);
-            }
-        }
-
-        /* ==========================================================================
-           SIMULATOR ENGINE & QUESTION RANDOMIZATION LOGIC (CORRECTION & FIX)
-           ========================================================================== */
-        
-        // Helper: Shuffle Array (Fisher-Yates)
-        function shuffleArray(array) {
-            const arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
-
-        // Form registration submission
-        function handleRegistration(e) {
-            if (e) e.preventDefault();
-            
-            state.candidate.name = document.getElementById('inputCandidateName').value.trim() || "Candidato ANAC";
-            state.candidate.canac = document.getElementById('inputCanac').value.trim() || "000000";
-            state.candidate.ciac = document.getElementById('selectCiac').value;
-
-            const modeRadios = document.getElementsByName('examModeRadio');
-            for (let radio of modeRadios) {
-                if (radio.checked) {
-                    state.examMode = radio.value;
-                    break;
-                }
-            }
-
-            updateHeaderUserBadge();
-            startNewFullExam();
-        }
-
-        function handlePhotoUpload(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    state.candidate.photoUrl = evt.target.result;
-                    document.getElementById('previewOaciPhoto').src = evt.target.result;
-                    if (document.getElementById('headerUserPhoto')) {
-                        document.getElementById('headerUserPhoto').src = evt.target.result;
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function updateHeaderUserBadge() {
-            document.getElementById('headerUserName').innerText = state.candidate.name;
-            document.getElementById('headerUserCanac').innerText = state.candidate.canac;
-            document.getElementById('headerUserPhoto').src = state.candidate.photoUrl;
-            document.getElementById('headerUserBadge').classList.remove('hidden');
-        }
-
-        function updateModeSelectionStyle() {
-            // Visual feedback for selected mode
-        }
-
-        // Initialize exam with random selection of questions
-        function startNewFullExam() {
-            state.isFullExam = true;
-            state.completedBlocks = [false, false, false];
-            state.answers = {};
-            state.flags = {};
-            
-            buildRandomizedBlocks();
-            state.currentBlockIndex = 0;
-            state.currentQuestionIndex = 0;
-
-            startBlockTimer();
-            showScreen('examScreen');
-            renderCurrentQuestion();
-            renderQuestionGrid();
-        }
-
-        function quickStartBlock(bIdx) {
-            state.candidate.name = document.getElementById('inputCandidateName').value.trim() || "Candidato Autodidata";
-            state.candidate.canac = document.getElementById('inputCanac').value.trim() || "123456";
-            state.candidate.ciac = document.getElementById('selectCiac').value;
-            updateHeaderUserBadge();
-
-            state.isFullExam = false;
-            state.completedBlocks = [false, false, false];
-            state.answers = {};
-            state.flags = {};
-
-            buildRandomizedBlocks();
-            state.currentBlockIndex = bIdx;
-            state.currentQuestionIndex = 0;
-
-            startBlockTimer();
-            showScreen('examScreen');
-            renderCurrentQuestion();
-            renderQuestionGrid();
-        }
-
-        function buildRandomizedBlocks() {
-            const blockNames = [
-                "Bloco 1: Ciências Naturais, Matemática, Física & Eletricidade",
-                "Bloco 2: Regulamentação da Aviação Civil, CBA, SGSO & Fatores Humanos",
-                "Bloco 3: Conhecimentos Básicos de Manutenção, Tubulações & Balanceamento"
-            ];
-
-            state.activeExamBlocks = [];
-
-            for (let b = 0; b < 3; b++) {
-                const pool = QUESTION_BANK.filter(q => q.blockIndex === b);
-                const shuffledPool = shuffleArray(pool);
-                // Select 20 questions per block
-                const selected = shuffledPool.slice(0, 20).map(q => {
-                    // Randomize options order while keeping track of correct index
-                    const optionsWithOriginalIndex = q.options.map((opt, idx) => ({ text: opt, isCorrect: idx === q.correct }));
-                    const shuffledOptions = shuffleArray(optionsWithOriginalIndex);
-                    const newCorrectIndex = shuffledOptions.findIndex(o => o.isCorrect);
-
-                    return {
-                        text: q.text,
-                        options: shuffledOptions.map(o => o.text),
-                        correct: newCorrectIndex,
-                        explanation: q.explanation
-                    };
-                });
-
-                state.activeExamBlocks.push({
-                    blockName: blockNames[b],
-                    questions: selected
-                });
-            }
-        }
-
-        /* ==========================================================================
-           TIMER CONTROLLER
-           ========================================================================== */
-        function startBlockTimer() {
-            if (state.timerInterval) clearInterval(state.timerInterval);
-            state.timeRemaining = 30 * 60; // 30 minutes
-            updateTimerDisplay();
-
-            state.timerInterval = setInterval(() => {
-                state.timeRemaining--;
-                updateTimerDisplay();
-
-                if (state.timeRemaining <= 0) {
-                    clearInterval(state.timerInterval);
-                    showModal("Tempo Esgotado!", "O tempo limite de 30 minutos para este bloco expirou. O bloco será finalizado automaticamente.", () => {
-                        autoSubmitCurrentBlock();
-                    });
-                }
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            const mins = Math.floor(state.timeRemaining / 60);
-            const secs = state.timeRemaining % 60;
-            const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            const display = document.getElementById('timerDisplay');
-            if (display) display.innerText = formatted;
-        }
-
-        /* ==========================================================================
-           QUESTION RENDERER & INTERACTION LOGIC
-           ========================================================================== */
-        function renderCurrentQuestion() {
-            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
-            if (!currentBlock) return;
-
-            const question = currentBlock.questions[state.currentQuestionIndex];
-            if (!question) return;
-
-            // Update Block Header
-            document.getElementById('blockBadge').innerText = `BLOCO ${state.currentBlockIndex + 1} DE 3`;
-            document.getElementById('blockTitle').innerText = currentBlock.blockName;
-
-            // Question Info
-            document.getElementById('currentQuestionNum').innerText = state.currentQuestionIndex + 1;
-            document.getElementById('totalQuestionsInBlock').innerText = currentBlock.questions.length;
-            document.getElementById('questionText').innerText = question.text;
-
-            // Render Options
-            const optionsContainer = document.getElementById('optionsContainer');
-            optionsContainer.innerHTML = '';
-
-            const currentKey = `${state.currentBlockIndex}_${state.currentQuestionIndex}`;
-            const selectedAnswer = state.answers[currentKey];
-
-            question.options.forEach((optionText, optIdx) => {
-                const letter = String.fromCharCode(65 + optIdx); // A, B, C, D
-                const isSelected = selectedAnswer === optIdx;
-
-                const btn = document.createElement('button');
-                btn.type = "button";
-                btn.onclick = () => selectOption(optIdx);
-
-                let btnStyle = "w-full text-left p-4 rounded-xl border text-sm font-medium transition flex items-center space-x-3 ";
-                if (isSelected) {
-                    btnStyle += "bg-blue-600/20 border-blue-500 text-white shadow-lg ring-2 ring-blue-500/50";
-                } else {
-                    btnStyle += "bg-slate-900/80 border-slate-700/80 text-slate-200 hover:bg-slate-800 hover:border-slate-600";
-                }
-
-                btn.className = btnStyle;
-                btn.innerHTML = `
-                    <span class="w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
-                        ${letter}
-                    </span>
-                    <span class="leading-relaxed flex-grow">${optionText}</span>
-                `;
-                optionsContainer.appendChild(btn);
-            });
-
-            // Flag Button Status
-            const isFlagged = !!state.flags[currentKey];
-            const flagIcon = document.getElementById('flagIcon');
-            const flagText = document.getElementById('flagText');
-            if (isFlagged) {
-                flagIcon.className = "fa-solid fa-bookmark text-amber-400";
-                flagText.innerText = "Marcada para Revisão";
-            } else {
-                flagIcon.className = "fa-regular fa-bookmark";
-                flagText.innerText = "Marcar para Revisão";
-            }
-
-            // Navigation Buttons State
-            document.getElementById('btnPrev').disabled = state.currentQuestionIndex === 0;
-            
-            const isLast = state.currentQuestionIndex === currentBlock.questions.length - 1;
-            document.getElementById('btnNext').classList.toggle('hidden', isLast);
-
-            // Study Mode Feedback Box
-            const feedbackBox = document.getElementById('studyFeedbackBox');
-            if (state.examMode === 'estudo' && selectedAnswer !== undefined) {
-                feedbackBox.classList.remove('hidden');
-                document.getElementById('studyFeedbackContent').innerHTML = `
-                    <p class="mb-1">Sua resposta: <strong class="${selectedAnswer === question.correct ? 'text-emerald-400' : 'text-red-400'}">${selectedAnswer === question.correct ? 'CORRETA' : 'INCORRETA'}</strong> (Gabarito: Opção ${String.fromCharCode(65 + question.correct)})</p>
-                    <p>${question.explanation}</p>
-                `;
-            } else {
-                feedbackBox.classList.add('hidden');
-            }
-        }
-
-        function selectOption(optionIndex) {
-            const currentKey = `${state.currentBlockIndex}_${state.currentQuestionIndex}`;
-            state.answers[currentKey] = optionIndex;
-
-            renderCurrentQuestion();
-            renderQuestionGrid();
-        }
-
-        function navigateQuestion(direction) {
-            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
-            const newIndex = state.currentQuestionIndex + direction;
-
-            if (newIndex >= 0 && newIndex < currentBlock.questions.length) {
-                state.currentQuestionIndex = newIndex;
-                renderCurrentQuestion();
-                renderQuestionGrid();
-            }
-        }
-
-        function toggleFlagQuestion() {
-            const currentKey = `${state.currentBlockIndex}_${state.currentQuestionIndex}`;
-            state.flags[currentKey] = !state.flags[currentKey];
-            renderCurrentQuestion();
-            renderQuestionGrid();
-        }
-
-        function renderQuestionGrid() {
-            const grid = document.getElementById('questionGrid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
-            if (!currentBlock) return;
-
-            currentBlock.questions.forEach((_, qIdx) => {
-                const key = `${state.currentBlockIndex}_${qIdx}`;
-                const isAnswered = state.answers[key] !== undefined;
-                const isFlagged = !!state.flags[key];
-                const isCurrent = qIdx === state.currentQuestionIndex;
-
-                const btn = document.createElement('button');
-                btn.type = "button";
-                btn.onclick = () => {
-                    state.currentQuestionIndex = qIdx;
-                    renderCurrentQuestion();
-                    renderQuestionGrid();
-                };
-
-                let cls = "h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center border relative ";
-                if (isCurrent) {
-                    cls += "ring-2 ring-white shadow-lg ";
-                }
-
-                if (isFlagged) {
-                    cls += "bg-amber-500 text-slate-950 border-amber-300 font-black";
-                } else if (isAnswered) {
-                    cls += "bg-blue-600 text-white border-blue-400";
-                } else {
-                    cls += "bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800";
-                }
-
-                btn.className = cls;
-                btn.innerText = qIdx + 1;
-                grid.appendChild(btn);
-            });
-        }
-
-        function toggleScratchpad() {
-            const drawer = document.getElementById('scratchpadDrawer');
-            drawer.classList.toggle('hidden');
-        }
-
-        function confirmSubmitBlock() {
-            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
-            let unansweredCount = 0;
-
-            currentBlock.questions.forEach((_, qIdx) => {
-                if (state.answers[`${state.currentBlockIndex}_${qIdx}`] === undefined) {
-                    unansweredCount++;
-                }
-            });
-
-            let msg = unansweredCount > 0 
-                ? `Atenção: Você possui ${unansweredCount} questão(ões) NÃO respondida(s) neste bloco. Deseja finalizar assim mesmo?`
-                : "Deseja confirmar o envio das respostas deste bloco?";
-
-            showModal("Finalizar Bloco de Prova?", msg, () => {
-                autoSubmitCurrentBlock();
-            });
-        }
-
-        function autoSubmitCurrentBlock() {
-            if (state.timerInterval) clearInterval(state.timerInterval);
-
-            state.completedBlocks[state.currentBlockIndex] = true;
-
-            if (state.isFullExam && state.currentBlockIndex < 2) {
-                // Advance to next block
-                state.currentBlockIndex++;
-                state.currentQuestionIndex = 0;
-                startBlockTimer();
-                renderCurrentQuestion();
-                renderQuestionGrid();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                // Finish Exam and Show Results
-                showScreen('resultScreen');
-                renderExamResults();
-            }
-        }
-
-        function resetExamAnswers() {
-            if (state.timerInterval) clearInterval(state.timerInterval);
-            state.answers = {};
-            state.flags = {};
-            state.completedBlocks = [false, false, false];
-            state.activeExamBlocks = [];
-        }
-
-        // Window Load Initializer
-        window.onload = function() {
-            loadAndRenderDashboard();
-        };
-    </script>
+        item.innerHTML = `
+          <div style="font-weight: 700; background: #334155; color: white; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${letters[idx]}</div>
+          <div style="flex: 1;">${optText}</div>
+        `;
+        item.onclick = () => selectOption(idx);
+        container.appendChild(item);
+      });
+
+      const feedback = document.getElementById('studyFeedbackBox');
+      if (selectedMode === 'estudo' && selected !== undefined) {
+        feedback.classList.remove('hidden');
+        feedback.innerHTML = `<strong>${selected === q.correct ? '✅ Resposta Correta!' : '❌ Resposta Incorreta!'}</strong><br><span style="color:var(--text-muted);">${q.explanation}</span>`;
+      } else {
+        feedback.classList.add('hidden');
+      }
+
+      renderQuestionMap();
+    }
+
+    function selectOption(idx) {
+      userAnswers[currentQIndex] = idx;
+      renderQuestion();
+    }
+
+    function renderQuestionMap() {
+      const grid = document.getElementById('qMapGrid');
+      grid.innerHTML = '';
+      questions.forEach((_, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'q-map-btn';
+        if (idx === currentQIndex) btn.classList.add('current');
+        if (userAnswers[idx] !== undefined) btn.classList.add('answered');
+        btn.innerText = idx + 1;
+        btn.onclick = () => { currentQIndex = idx; renderQuestion(); };
+        grid.appendChild(btn);
+      });
+    }
+
+    function prevQuestion() { if (currentQIndex > 0) { currentQIndex--; renderQuestion(); } }
+    function nextQuestion() { if (currentQIndex < questions.length - 1) { currentQIndex++; renderQuestion(); } }
+
+    function finishBlock() {
+      clearInterval(timerInterval);
+      let score = 0;
+      questions.forEach((q, idx) => { if (userAnswers[idx] === q.correct) score++; });
+
+      saveRecord(currentBlock, score, questions.length);
+
+      if (examType === 'banca' && currentBlock < 3) {
+        alert(`Bloco ${currentBlock} Concluído! Avançando para o Bloco ${currentBlock + 1}...`);
+        currentBlock++;
+        userAnswers = {};
+        currentQIndex = 0;
+        initExamSession();
+      } else {
+        alert(`Simulado Finalizado! Sua pontuação: ${score}/20.`);
+        questions = [];
+        document.getElementById('screenExam').classList.add('hidden');
+        document.getElementById('screenSetup').classList.remove('hidden');
+      }
+    }
+
+    function saveRecord(bNum, score, total) {
+      const history = JSON.parse(localStorage.getItem('anac_history') || '[]');
+      history.push({
+        date: new Date().toLocaleString('pt-BR'),
+        type: examType === 'banca' ? `Banca Completa (Bloco ${bNum})` : `Bloco Individual ${bNum}`,
+        score: `${score}/${total}`,
+        passed: score >= 14
+      });
+      localStorage.setItem('anac_history', JSON.stringify(history));
+    }
+
+    function loadDashboard() {
+      const history = JSON.parse(localStorage.getItem('anac_history') || '[]');
+      document.getElementById('dashTotalExams').innerText = history.length;
+      document.getElementById('dashPassCount').innerText = history.filter(h => h.passed).length;
+
+      if (history.length > 0) {
+        const totalScore = history.reduce((acc, h) => acc + parseInt(h.score.split('/')[0]), 0);
+        document.getElementById('dashAvgScore').innerText = `${Math.round((totalScore / (history.length * 20)) * 100)}%`;
+      } else {
+        document.getElementById('dashAvgScore').innerText = '0%';
+      }
+
+      const tbody = document.getElementById('dashHistoryBody');
+      tbody.innerHTML = '';
+      history.slice().reverse().forEach(h => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--card-border)';
+        tr.innerHTML = `
+          <td style="padding:0.6rem;">${h.date}</td>
+          <td style="padding:0.6rem;">${h.type}</td>
+          <td style="padding:0.6rem;">${h.score}</td>
+          <td style="padding:0.6rem; font-weight:bold; color:${h.passed ? 'var(--success-green)' : 'var(--danger-red)'};">
+            ${h.passed ? 'Aprovado' : 'Reprovado'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getBlockFullName(num) {
+      if (num === 1) return "Bloco 1: Ciências Naturais, Matemática & Física";
+      if (num === 2) return "Bloco 2: Regulamentação da Aviação Civil & SGSO";
+      return "Bloco 3: Práticas de Manutenção, Materiais & Ferramentas";
+    }
+  </script>
 </body>
 </html>
