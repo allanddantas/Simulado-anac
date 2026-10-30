@@ -1529,6 +1529,373 @@
                 quickStartBlock(state.currentBlockIndex);
             }
         }
+
+        /* ==========================================================================
+           SIMULATOR ENGINE & QUESTION RANDOMIZATION LOGIC (CORRECTION & FIX)
+           ========================================================================== */
+        
+        // Helper: Shuffle Array (Fisher-Yates)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Form registration submission
+        function handleRegistration(e) {
+            if (e) e.preventDefault();
+            
+            state.candidate.name = document.getElementById('inputCandidateName').value.trim() || "Candidato ANAC";
+            state.candidate.canac = document.getElementById('inputCanac').value.trim() || "000000";
+            state.candidate.ciac = document.getElementById('selectCiac').value;
+
+            const modeRadios = document.getElementsByName('examModeRadio');
+            for (let radio of modeRadios) {
+                if (radio.checked) {
+                    state.examMode = radio.value;
+                    break;
+                }
+            }
+
+            updateHeaderUserBadge();
+            startNewFullExam();
+        }
+
+        function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    state.candidate.photoUrl = evt.target.result;
+                    document.getElementById('previewOaciPhoto').src = evt.target.result;
+                    if (document.getElementById('headerUserPhoto')) {
+                        document.getElementById('headerUserPhoto').src = evt.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateHeaderUserBadge() {
+            document.getElementById('headerUserName').innerText = state.candidate.name;
+            document.getElementById('headerUserCanac').innerText = state.candidate.canac;
+            document.getElementById('headerUserPhoto').src = state.candidate.photoUrl;
+            document.getElementById('headerUserBadge').classList.remove('hidden');
+        }
+
+        function updateModeSelectionStyle() {
+            // Visual feedback for selected mode
+        }
+
+        // Initialize exam with random selection of questions
+        function startNewFullExam() {
+            state.isFullExam = true;
+            state.completedBlocks = [false, false, false];
+            state.answers = {};
+            state.flags = {};
+            
+            buildRandomizedBlocks();
+            state.currentBlockIndex = 0;
+            state.currentQuestionIndex = 0;
+
+            startBlockTimer();
+            showScreen('examScreen');
+            renderCurrentQuestion();
+            renderQuestionGrid();
+        }
+
+        function quickStartBlock(bIdx) {
+            state.candidate.name = document.getElementById('inputCandidateName').value.trim() || "Candidato Autodidata";
+            state.candidate.canac = document.getElementById('inputCanac').value.trim() || "123456";
+            state.candidate.ciac = document.getElementById('selectCiac').value;
+            updateHeaderUserBadge();
+
+            state.isFullExam = false;
+            state.completedBlocks = [false, false, false];
+            state.answers = {};
+            state.flags = {};
+
+            buildRandomizedBlocks();
+            state.currentBlockIndex = bIdx;
+            state.currentQuestionIndex = 0;
+
+            startBlockTimer();
+            showScreen('examScreen');
+            renderCurrentQuestion();
+            renderQuestionGrid();
+        }
+
+        function buildRandomizedBlocks() {
+            const blockNames = [
+                "Bloco 1: Ciências Naturais, Matemática, Física & Eletricidade",
+                "Bloco 2: Regulamentação da Aviação Civil, CBA, SGSO & Fatores Humanos",
+                "Bloco 3: Conhecimentos Básicos de Manutenção, Tubulações & Balanceamento"
+            ];
+
+            state.activeExamBlocks = [];
+
+            for (let b = 0; b < 3; b++) {
+                const pool = QUESTION_BANK.filter(q => q.blockIndex === b);
+                const shuffledPool = shuffleArray(pool);
+                // Select 20 questions per block
+                const selected = shuffledPool.slice(0, 20).map(q => {
+                    // Randomize options order while keeping track of correct index
+                    const optionsWithOriginalIndex = q.options.map((opt, idx) => ({ text: opt, isCorrect: idx === q.correct }));
+                    const shuffledOptions = shuffleArray(optionsWithOriginalIndex);
+                    const newCorrectIndex = shuffledOptions.findIndex(o => o.isCorrect);
+
+                    return {
+                        text: q.text,
+                        options: shuffledOptions.map(o => o.text),
+                        correct: newCorrectIndex,
+                        explanation: q.explanation
+                    };
+                });
+
+                state.activeExamBlocks.push({
+                    blockName: blockNames[b],
+                    questions: selected
+                });
+            }
+        }
+
+        /* ==========================================================================
+           TIMER CONTROLLER
+           ========================================================================== */
+        function startBlockTimer() {
+            if (state.timerInterval) clearInterval(state.timerInterval);
+            state.timeRemaining = 30 * 60; // 30 minutes
+            updateTimerDisplay();
+
+            state.timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                updateTimerDisplay();
+
+                if (state.timeRemaining <= 0) {
+                    clearInterval(state.timerInterval);
+                    showModal("Tempo Esgotado!", "O tempo limite de 30 minutos para este bloco expirou. O bloco será finalizado automaticamente.", () => {
+                        autoSubmitCurrentBlock();
+                    });
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(state.timeRemaining / 60);
+            const secs = state.timeRemaining % 60;
+            const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            const display = document.getElementById('timerDisplay');
+            if (display) display.innerText = formatted;
+        }
+
+        /* ==========================================================================
+           QUESTION RENDERER & INTERACTION LOGIC
+           ========================================================================== */
+        function renderCurrentQuestion() {
+            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
+            if (!currentBlock) return;
+
+            const question = currentBlock.questions[state.currentQuestionIndex];
+            if (!question) return;
+
+            // Update Block Header
+            document.getElementById('blockBadge').innerText = `BLOCO ${state.currentBlockIndex + 1} DE 3`;
+            document.getElementById('blockTitle').innerText = currentBlock.blockName;
+
+            // Question Info
+            document.getElementById('currentQuestionNum').innerText = state.currentQuestionIndex + 1;
+            document.getElementById('totalQuestionsInBlock').innerText = currentBlock.questions.length;
+            document.getElementById('questionText').innerText = question.text;
+
+            // Render Options
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const currentKey = `${state.currentBlockIndex}_${state.currentQuestionIndex}`;
+            const selectedAnswer = state.answers[currentKey];
+
+            question.options.forEach((optionText, optIdx) => {
+                const letter = String.fromCharCode(65 + optIdx); // A, B, C, D
+                const isSelected = selectedAnswer === optIdx;
+
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.onclick = () => selectOption(optIdx);
+
+                let btnStyle = "w-full text-left p-4 rounded-xl border text-sm font-medium transition flex items-center space-x-3 ";
+                if (isSelected) {
+                    btnStyle += "bg-blue-600/20 border-blue-500 text-white shadow-lg ring-2 ring-blue-500/50";
+                } else {
+                    btnStyle += "bg-slate-900/80 border-slate-700/80 text-slate-200 hover:bg-slate-800 hover:border-slate-600";
+                }
+
+                btn.className = btnStyle;
+                btn.innerHTML = `
+                    <span class="w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
+                        ${letter}
+                    </span>
+                    <span class="leading-relaxed flex-grow">${optionText}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            // Flag Button Status
+            const isFlagged = !!state.flags[currentKey];
+            const flagIcon = document.getElementById('flagIcon');
+            const flagText = document.getElementById('flagText');
+            if (isFlagged) {
+                flagIcon.className = "fa-solid fa-bookmark text-amber-400";
+                flagText.innerText = "Marcada para Revisão";
+            } else {
+                flagIcon.className = "fa-regular fa-bookmark";
+                flagText.innerText = "Marcar para Revisão";
+            }
+
+            // Navigation Buttons State
+            document.getElementById('btnPrev').disabled = state.currentQuestionIndex === 0;
+            
+            const isLast = state.currentQuestionIndex === currentBlock.questions.length - 1;
+            document.getElementById('btnNext').classList.toggle('hidden', isLast);
+
+            // Study Mode Feedback Box
+            const feedbackBox = document.getElementById('studyFeedbackBox');
+            if (state.examMode === 'estudo' && selectedAnswer !== undefined) {
+                feedbackBox.classList.remove('hidden');
+                document.getElementById('studyFeedbackContent').innerHTML = `
+                    <p class="mb-1">Sua resposta: <strong class="${selectedAnswer === question.correct ? 'text-emerald-400' : 'text-red-400'}">${selectedAnswer === question.correct ? 'CORRETA' : 'INCORRETA'}</strong> (Gabarito: Opção ${String.fromCharCode(65 + question.correct)})</p>
+                    <p>${question.explanation}</p>
+                `;
+            } else {
+                feedbackBox.classList.add('hidden');
+            }
+        }
+
+        function selectOption(optionIndex) {
+            const currentKey = `${state.currentBlockIndex}_${state.currentQuestionIndex}`;
+            state.answers[currentKey] = optionIndex;
+
+            renderCurrentQuestion();
+            renderQuestionGrid();
+        }
+
+        function navigateQuestion(direction) {
+            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
+            const newIndex = state.currentQuestionIndex + direction;
+
+            if (newIndex >= 0 && newIndex < currentBlock.questions.length) {
+                state.currentQuestionIndex = newIndex;
+                renderCurrentQuestion();
+                renderQuestionGrid();
+            }
+        }
+
+        function toggleFlagQuestion() {
+            const currentKey = `${state.currentBlockIndex}_${state.currentQuestionIndex}`;
+            state.flags[currentKey] = !state.flags[currentKey];
+            renderCurrentQuestion();
+            renderQuestionGrid();
+        }
+
+        function renderQuestionGrid() {
+            const grid = document.getElementById('questionGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
+            if (!currentBlock) return;
+
+            currentBlock.questions.forEach((_, qIdx) => {
+                const key = `${state.currentBlockIndex}_${qIdx}`;
+                const isAnswered = state.answers[key] !== undefined;
+                const isFlagged = !!state.flags[key];
+                const isCurrent = qIdx === state.currentQuestionIndex;
+
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.onclick = () => {
+                    state.currentQuestionIndex = qIdx;
+                    renderCurrentQuestion();
+                    renderQuestionGrid();
+                };
+
+                let cls = "h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center border relative ";
+                if (isCurrent) {
+                    cls += "ring-2 ring-white shadow-lg ";
+                }
+
+                if (isFlagged) {
+                    cls += "bg-amber-500 text-slate-950 border-amber-300 font-black";
+                } else if (isAnswered) {
+                    cls += "bg-blue-600 text-white border-blue-400";
+                } else {
+                    cls += "bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800";
+                }
+
+                btn.className = cls;
+                btn.innerText = qIdx + 1;
+                grid.appendChild(btn);
+            });
+        }
+
+        function toggleScratchpad() {
+            const drawer = document.getElementById('scratchpadDrawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function confirmSubmitBlock() {
+            const currentBlock = state.activeExamBlocks[state.currentBlockIndex];
+            let unansweredCount = 0;
+
+            currentBlock.questions.forEach((_, qIdx) => {
+                if (state.answers[`${state.currentBlockIndex}_${qIdx}`] === undefined) {
+                    unansweredCount++;
+                }
+            });
+
+            let msg = unansweredCount > 0 
+                ? `Atenção: Você possui ${unansweredCount} questão(ões) NÃO respondida(s) neste bloco. Deseja finalizar assim mesmo?`
+                : "Deseja confirmar o envio das respostas deste bloco?";
+
+            showModal("Finalizar Bloco de Prova?", msg, () => {
+                autoSubmitCurrentBlock();
+            });
+        }
+
+        function autoSubmitCurrentBlock() {
+            if (state.timerInterval) clearInterval(state.timerInterval);
+
+            state.completedBlocks[state.currentBlockIndex] = true;
+
+            if (state.isFullExam && state.currentBlockIndex < 2) {
+                // Advance to next block
+                state.currentBlockIndex++;
+                state.currentQuestionIndex = 0;
+                startBlockTimer();
+                renderCurrentQuestion();
+                renderQuestionGrid();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // Finish Exam and Show Results
+                showScreen('resultScreen');
+                renderExamResults();
+            }
+        }
+
+        function resetExamAnswers() {
+            if (state.timerInterval) clearInterval(state.timerInterval);
+            state.answers = {};
+            state.flags = {};
+            state.completedBlocks = [false, false, false];
+            state.activeExamBlocks = [];
+        }
+
+        // Window Load Initializer
+        window.onload = function() {
+            loadAndRenderDashboard();
+        };
     </script>
 </body>
 </html>
